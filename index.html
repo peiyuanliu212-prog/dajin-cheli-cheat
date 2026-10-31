@@ -198,6 +198,26 @@ body.police { animation: police .16s steps(1) 6; }
 
 .share-preview { width: 100%; border-radius: 12px; margin-top: 10px; }
 
+/* ===== 瑰宝现世界面 ===== */
+#ultra-reveal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 42%, rgba(28,90,110,.88), rgba(2,10,16,.94) 68%); overflow: hidden; }
+#ultra-reveal.hidden { display: none; }
+#ultra-fx { position: absolute; inset: 0; pointer-events: none; }
+.ultra-rays { position: absolute; left: 50%; top: 42%; width: 150vmax; height: 150vmax; transform: translate(-50%,-50%); background: repeating-conic-gradient(from 0deg, rgba(126,231,255,.13) 0deg 7deg, transparent 7deg 15deg); animation: ultraSpin 16s linear infinite; pointer-events: none; }
+@keyframes ultraSpin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+.ultra-inner { position: relative; text-align: center; padding: 24px; animation: ultraIn .45s cubic-bezier(.2,1.6,.4,1); }
+@keyframes ultraIn { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.ultra-banner { font-size: 21px; font-weight: 900; letter-spacing: 6px; background: linear-gradient(92deg, #7ee7ff, #ffd700, #7ee7ff); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 10px; }
+.ultra-icon { font-size: 118px; line-height: 1.15; filter: drop-shadow(0 0 26px rgba(126,231,255,.95)) drop-shadow(0 0 60px rgba(255,215,0,.45)); animation: ultraPulse 1.1s ease-in-out infinite alternate; }
+@keyframes ultraPulse { from { transform: scale(1); } to { transform: scale(1.07); } }
+.ultra-name { font-size: 34px; font-weight: 900; color: #eafcff; margin-top: 6px; text-shadow: 0 0 18px rgba(126,231,255,.8); }
+.ultra-desc { font-size: 14px; color: #bfe9ff; margin-top: 6px; }
+.ultra-value { font-size: 44px; font-weight: 900; color: #ffd700; margin-top: 12px; text-shadow: 0 0 22px rgba(255,215,0,.75); font-variant-numeric: tabular-nums; }
+.ultra-hint { font-size: 12px; color: rgba(230,250,255,.55); margin-top: 18px; animation: ultraPulse 1s ease-in-out infinite alternate; }
+#app.ultra-shake { animation: ultraShake .5s ease-in-out; }
+@keyframes ultraShake { 0%,100% { transform: translate(0,0); } 20% { transform: translate(-7px,3px); } 40% { transform: translate(6px,-4px); } 60% { transform: translate(-5px,-2px); } 80% { transform: translate(4px,2px); } }
+.bag-item.t6 { border-color: #7ee7ff !important; animation: ultraGlow 1.5s ease-in-out infinite alternate; }
+@keyframes ultraGlow { from { box-shadow: 0 0 6px rgba(126,231,255,.45); } to { box-shadow: 0 0 18px rgba(126,231,255,.95), 0 0 30px rgba(255,215,0,.35); } }
+
 </style>
 </head>
 <body>
@@ -359,6 +379,18 @@ body.police { animation: police .16s steps(1) 6; }
 
   <div id="vignette"></div>
   <div id="loot-pop" class="hidden"><div id="loot-pop-inner"></div></div>
+  <div id="ultra-reveal" class="hidden">
+    <canvas id="ultra-fx"></canvas>
+    <div class="ultra-rays"></div>
+    <div class="ultra-inner">
+      <div class="ultra-banner">★ 瑰 宝 现 世 ★</div>
+      <div class="ultra-icon" id="ultra-icon">🔷</div>
+      <div class="ultra-name" id="ultra-name"></div>
+      <div class="ultra-desc" id="ultra-desc"></div>
+      <div class="ultra-value" id="ultra-value">0 万</div>
+      <div class="ultra-hint">轻点任意处收下</div>
+    </div>
+  </div>
 </div>
 <script>
 
@@ -1343,6 +1375,12 @@ const Sfx = {
   discard() { tone(130, 0.12, { type: 'triangle', gain: 0.07, slideTo: 70 }); },
   caught() { for (let i = 0; i < 3; i++) { tone(520, 0.16, { type: 'sawtooth', gain: 0.06, at: i * 0.34 }); tone(392, 0.16, { type: 'sawtooth', gain: 0.06, at: i * 0.34 + 0.17 }); } },
   evac() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.13, { gain: 0.05, at: i * 0.09 })); },
+  ultra() {
+    tone(72, 0.55, { type: 'sine', gain: 0.14, slideTo: 36 });
+    [392, 523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 0.16, { type: 'triangle', gain: 0.055, at: 0.12 + i * 0.07 }));
+    [1568, 2093].forEach((f) => tone(f, 0.7, { type: 'sine', gain: 0.045, at: 0.55 }));
+    tone(2637, 0.9, { type: 'sine', gain: 0.03, at: 0.8 });
+  },
 };
 
 /* ===== src/main.js ===== */
@@ -1352,7 +1390,7 @@ const Sfx = {
 const params = new URLSearchParams(location.search);
 const FAST = params.get('fast') === '1';
 const SEED_PARAM = params.get('seed') ? Number(params.get('seed')) : null;
-const REVEAL_MS = [550, 700, 900, 1200, 1600, 2100]; // 揭示节奏放慢（ADR-020）：每格开出要有分量
+const REVEAL_MS = [550, 700, 900, 1200, 1600, 2100, 2400]; // 揭示节奏放慢（ADR-020）：每格开出要有分量
 const $ = id => document.getElementById(id);
 
 let save = loadSave();
@@ -1822,9 +1860,13 @@ async function onCell(idx) {
     await delay(REVEAL_MS[ev.item.tier]);
     if (cellEl) cellEl.classList.remove('searching');
     renderCellOpened(idx, ev.item);
-    Sfx.reveal(ev.item.tier);
-    if (ev.item.tier >= 3) showLootPop(ev.item);
-    if (ev.item.tier >= 4 && navigator.vibrate) navigator.vibrate(ev.item.tier === 5 ? [60, 40, 90] : 45);
+    if (ev.item.tier === 6) {
+      await showUltraReveal(ev.item);
+    } else {
+      Sfx.reveal(ev.item.tier);
+      if (ev.item.tier >= 3) showLootPop(ev.item);
+      if (ev.item.tier >= 4 && navigator.vibrate) navigator.vibrate(ev.item.tier === 5 ? [60, 40, 90] : 45);
+    }
     if (ev.scared) { Sfx.scare(); flashVignette(); }
     const scareTxt = ev.scared ? ' 旁边货架咯吱一响，震动额外 +4！' : '';
     if (ev.type === 'item') {
@@ -1866,6 +1908,71 @@ function riskBand(p) {
   if (p <= 0.75) return '高危';
   if (p < 1) return '极危';
   return '必塌';
+}
+
+
+// ---------- 瑰宝现世界面（tier 6 专属）：全屏爆光 + 粒子 + 数字滚动 + 专属音效 ----------
+let ultraCleanup = null;
+function showUltraReveal(item) {
+  if (FAST) return Promise.resolve();
+  return new Promise((resolve) => {
+    const ov = $('ultra-reveal');
+    $('ultra-icon').textContent = item.icon;
+    $('ultra-name').textContent = item.name;
+    $('ultra-desc').textContent = item.desc;
+    const valEl = $('ultra-value');
+    ov.classList.remove('hidden');
+    document.getElementById('app').classList.add('ultra-shake');
+    setTimeout(() => document.getElementById('app').classList.remove('ultra-shake'), 550);
+    Sfx.ultra();
+    if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 170]);
+    // 数字滚动
+    const t0 = performance.now(), dur = 950, target = item.value;
+    let raf = 0;
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      valEl.textContent = fmtWan(Math.round(target * e * 10) / 10) + ' 万';
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    // 粒子爆散
+    const cv = $('ultra-fx'), cx = cv.getContext('2d');
+    cv.width = innerWidth; cv.height = innerHeight;
+    const cols = ['#7ee7ff', '#ffd700', '#ffffff', '#a5f3ff'];
+    const parts = Array.from({ length: 120 }, () => ({
+      x: innerWidth / 2, y: innerHeight / 2, a: Math.random() * Math.PI * 2,
+      v: 2 + Math.random() * 6.5, r: 1.5 + Math.random() * 3, life: 1,
+      d: 0.008 + Math.random() * 0.014, c: cols[Math.floor(Math.random() * cols.length)],
+    }));
+    let fxRaf = 0;
+    const fxTick = () => {
+      cx.clearRect(0, 0, cv.width, cv.height);
+      let alive = false;
+      for (const pt of parts) {
+        if (pt.life <= 0) continue;
+        alive = true;
+        pt.x += Math.cos(pt.a) * pt.v; pt.y += Math.sin(pt.a) * pt.v + 1.6;
+        pt.v *= 0.985; pt.life -= pt.d;
+        cx.globalAlpha = Math.max(0, pt.life);
+        cx.fillStyle = pt.c;
+        cx.beginPath(); cx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2); cx.fill();
+      }
+      cx.globalAlpha = 1;
+      if (alive) fxRaf = requestAnimationFrame(fxTick);
+    };
+    fxRaf = requestAnimationFrame(fxTick);
+    let done = false;
+    const finish = () => {
+      if (done) return; done = true;
+      cancelAnimationFrame(raf); cancelAnimationFrame(fxRaf);
+      ov.classList.add('hidden');
+      ov.removeEventListener('pointerdown', finish);
+      resolve();
+    };
+    ultraCleanup = finish;
+    ov.addEventListener('pointerdown', finish);
+    setTimeout(finish, 2600);
+  });
 }
 
 // ---------- 满仓处置 ----------
