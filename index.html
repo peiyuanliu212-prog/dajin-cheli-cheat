@@ -1,0 +1,2272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>大金撤离：再贪一格【破解版】</title>
+<style>
+:root {
+  --safe-top: 0px; /* 全屏容器顶部安全距，由 applySafeTop() 在容器内写入实际值（ADR-033） */
+  --bg: #10130e;
+  --panel: #1b2016;
+  --panel-2: #232a1c;
+  --line: #3a4430;
+  --olive: #7fb069;
+  --khaki: #c9b458;
+  --hazard: #f2b705;
+  --text: #e8e6da;
+  --muted: #9aa48c;
+  --danger: #e5484d;
+  --danger-dim: #5a2326;
+  --tier-white: #cfd2c9;
+  --tier-green: #58b368;
+  --tier-blue: #4f9dde;
+  --tier-purple: #a06cd5;
+  --tier-gold: #f5b921;
+  --tier-red: #ef3e4a;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--text); font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+#app { max-width: 480px; margin: 0 auto; padding: calc(16px + var(--safe-top)) 14px 40px; min-height: 100vh; }
+.screen { display: none; }
+.screen.active { display: block; }
+.hidden { display: none !important; }
+
+.hazard { height: 14px; margin: -16px -14px 18px; background: repeating-linear-gradient(45deg, var(--hazard) 0 16px, #10130e 16px 32px); }
+.logo { font-size: 52px; letter-spacing: 10px; text-align: center; margin-top: 10px; }
+.subtitle { text-align: center; color: var(--khaki); letter-spacing: 8px; font-size: 17px; margin-top: 2px; }
+.tagline { text-align: center; color: var(--muted); line-height: 1.7; margin: 18px 0; font-size: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.records { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin-bottom: 18px; }
+.rec span { display: block; color: var(--muted); font-size: 12px; }
+.rec b { font-size: 18px; color: var(--text); }
+.config-switch { margin-bottom: 20px; }
+.cs-label { color: var(--muted); font-size: 13px; display: block; margin-bottom: 8px; }
+.seg { display: flex; gap: 10px; }
+.seg-btn { flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 10px; font-size: 16px; cursor: pointer; }
+.seg-btn small { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+.seg-btn.on { border-color: var(--hazard); background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--hazard); }
+.btn-primary { display: block; width: 100%; background: var(--hazard); color: #141414; border: none; border-radius: 10px; padding: 15px; font-size: 19px; font-weight: 700; letter-spacing: 3px; cursor: pointer; }
+.btn-primary:active { transform: scale(.99); }
+.btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 11px 16px; font-size: 15px; cursor: pointer; }
+.btn-danger { background: var(--danger); border: none; color: #fff; border-radius: 10px; padding: 11px 16px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.fineprint { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 16px; text-align: center; }
+.screen-title { font-size: 22px; letter-spacing: 4px; margin: 8px 0 14px; }
+
+.wh-card { width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 12px; color: var(--text); cursor: pointer; }
+.wh-card:active { border-color: var(--hazard); }
+.wh-name { font-size: 21px; font-weight: 700; letter-spacing: 2px; }
+.wh-tag { color: var(--khaki); font-size: 13px; margin-left: 8px; }
+.wh-meta { color: var(--muted); font-size: 13px; margin-top: 8px; line-height: 1.6; }
+.wh-meta b { color: var(--text); }
+
+.hud { margin-bottom: 12px; }
+.hud-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.hud-item span { display: block; color: var(--muted); font-size: 11px; }
+.hud-item b { font-size: 17px; }
+#hud-value { color: var(--hazard); }
+.alert-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+#alert-stage { color: var(--text); font-weight: 700; }
+.alert-bar { position: relative; height: 12px; background: #0b0d09; border: 1px solid var(--line); border-radius: 6px; margin: 6px 0 4px; overflow: hidden; }
+#alert-fill { height: 100%; width: 0%; background: var(--olive); transition: width .35s ease, background .35s; }
+.alert-bar .tick { position: absolute; top: 0; width: 2px; height: 100%; background: var(--muted); opacity: .7; }
+.alert-bar .tick.danger { background: var(--danger); }
+.alert-warn { min-height: 18px; font-size: 13px; color: var(--danger); font-weight: 700; }
+.depth-hint { color: var(--muted); font-size: 12px; }
+
+.cells { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
+.cell { aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font-size: 24px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px; }
+.cell small { font-size: 10px; color: var(--muted); }
+.cell .cv { font-size: 11px; color: var(--hazard); font-weight: 700; }
+.cell.unopened { background: repeating-linear-gradient(45deg, #262e1f 0 10px, #20271a 10px 20px); }
+.cell.opened { cursor: default; background: var(--panel); }
+.cell.revealing { animation: flip .3s ease; }
+@keyframes flip { 0% { transform: scaleX(.2); } 100% { transform: scaleX(1); } }
+.cell.t0 { border-color: var(--tier-white); } .cell.t1 { border-color: var(--tier-green); }
+.cell.t2 { border-color: var(--tier-blue); } .cell.t3 { border-color: var(--tier-purple); }
+.cell.t4 { border-color: var(--tier-gold); box-shadow: 0 0 10px rgba(245,185,33,.35); }
+.cell.t5 { border-color: var(--tier-red); box-shadow: 0 0 14px rgba(239,62,74,.55); }
+.event-line { min-height: 22px; color: var(--khaki); font-size: 14px; margin: 4px 0 10px; }
+.event-line.bad { color: var(--danger); }
+
+.bag-head { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+.bag { position: relative; height: 176px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 20% 25%; margin-bottom: 14px; }
+.bag-item { position: absolute; border: 1.5px solid; border-radius: 6px; background: rgba(16,19,14,.88); display: flex; align-items: center; justify-content: center; font-size: 19px; }
+.bag-item .lock { position: absolute; top: -7px; right: -5px; font-size: 11px; }
+.bag-item.t0 { border-color: var(--tier-white); } .bag-item.t1 { border-color: var(--tier-green); }
+.bag-item.t2 { border-color: var(--tier-blue); } .bag-item.t3 { border-color: var(--tier-purple); }
+.bag-item.t4 { border-color: var(--tier-gold); } .bag-item.t5 { border-color: var(--tier-red); }
+.evac { margin-top: 2px; }
+.seed-line { color: var(--muted); font-size: 12px; text-align: center; margin-top: 10px; }
+
+.modal { position: fixed; inset: 0; background: rgba(5,6,4,.78); display: flex; align-items: center; justify-content: center; z-index: 30; padding: calc(18px + var(--safe-top)) 18px 18px; }
+.modal-card { background: var(--panel); border: 1px solid var(--hazard); border-radius: 14px; padding: 20px; width: 100%; max-width: 420px; max-height: 86vh; overflow-y: auto; }
+.modal-card h3 { letter-spacing: 3px; margin-bottom: 12px; }
+.pending-item { border: 1.5px solid; border-radius: 10px; padding: 12px; text-align: center; font-size: 17px; margin-bottom: 12px; }
+.pending-item small { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+.pending-note { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 10px; }
+.modal-btns.col { flex-direction: column; }
+.modal-btns > * { flex: 1; }
+.discard-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.discard-chip { border: 1px solid var(--line); background: var(--panel-2); color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 13px; cursor: pointer; }
+.discard-chip.sel { border-color: var(--danger); background: var(--danger-dim); }
+
+.result-head { text-align: center; margin: 14px 0 6px; }
+.result-head .big { font-size: 40px; letter-spacing: 6px; font-weight: 800; }
+.result-head.win .big { color: var(--olive); }
+.result-head.lose .big { color: var(--danger); }
+.result-sub { text-align: center; color: var(--muted); margin-bottom: 14px; }
+.ledger { margin-bottom: 14px; }
+.ledger .row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: 15px; }
+.ledger .row span { color: var(--muted); }
+.ledger .row.total b { color: var(--hazard); font-size: 19px; }
+.stamp { display: inline-block; border: 4px solid var(--danger); color: var(--danger); font-size: 56px; font-weight: 800; padding: 2px 18px; border-radius: 8px; transform: rotate(-8deg); margin: 8px 0; }
+.top-item { text-align: center; font-size: 16px; margin-bottom: 12px; }
+#share-canvas { width: 100%; border: 1px solid var(--line); border-radius: 10px; margin: 8px 0 4px; }
+.shake { animation: shake .5s ease; }
+@keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ===== 刺激感补强（ADR-020）===== */
+#vignette { position: fixed; inset: 0; pointer-events: none; z-index: 20; opacity: 0; transition: opacity .45s ease; box-shadow: inset 0 0 90px 30px rgba(229,72,77,.55); }
+#vignette.pulse { animation: vpulse 1.15s ease-in-out infinite; }
+@keyframes vpulse { 0%,100% { opacity: var(--vop, .3); } 50% { opacity: calc(var(--vop, .3) * 0.45); } }
+#vignette.flash { transition: opacity .08s; opacity: 1 !important; }
+body.police { animation: police .16s steps(1) 6; }
+@keyframes police { 0% { box-shadow: inset 0 0 120px 40px rgba(229,72,77,.75); } 50% { box-shadow: inset 0 0 120px 40px rgba(79,157,222,.75); } 100% { box-shadow: inset 0 0 120px 40px rgba(229,72,77,.75); } }
+.cell.searching { animation: searching .5s ease-in-out infinite alternate; background: #2c3624; }
+@keyframes searching { from { transform: scale(1); } to { transform: scale(.94); } }
+#loot-pop { position: fixed; inset: 0; z-index: 25; display: flex; align-items: center; justify-content: center; pointer-events: none; padding: 24px; }
+#loot-pop-inner { text-align: center; border: 2px solid; border-radius: 16px; background: rgba(13,15,11,.93); padding: 26px 34px; animation: lootpop .38s cubic-bezier(.2,1.6,.4,1); max-width: 340px; }
+@keyframes lootpop { 0% { transform: scale(.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+#loot-pop .lp-icon { font-size: 64px; display: block; }
+#loot-pop .lp-name { font-size: 23px; font-weight: 800; margin-top: 8px; }
+#loot-pop .lp-tier { font-size: 14px; letter-spacing: 4px; margin-top: 4px; }
+#loot-pop .lp-value { font-size: 30px; color: var(--hazard); font-weight: 800; margin-top: 6px; }
+#loot-pop.t3 #loot-pop-inner { border-color: var(--tier-purple); box-shadow: 0 0 44px rgba(160,108,213,.55); }
+#loot-pop.t4 #loot-pop-inner { border-color: var(--tier-gold); box-shadow: 0 0 60px rgba(245,185,33,.7); }
+#loot-pop.t5 #loot-pop-inner { border-color: var(--tier-red); box-shadow: 0 0 80px rgba(239,62,74,.85); }
+#loot-pop.t5 { background: radial-gradient(ellipse at center, rgba(239,62,74,.22), rgba(13,15,11,.55) 75%); }
+.sound-toggle { display: block; margin: 12px auto 0; }
+.sound-mini { background: transparent; border: 1px solid var(--line); border-radius: 6px; color: var(--text); font-size: 13px; padding: 1px 7px; cursor: pointer; }
+
+/* ===== M2 收藏层 ===== */
+.home-nav { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+.screen-sub { color: var(--muted); font-size: 13px; text-align: center; margin: 2px 0 12px; }
+.coll-set { margin-bottom: 18px; }
+.coll-set-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 5px; margin-bottom: 8px; }
+.coll-set-head b { font-size: 15px; }
+.coll-set-head span { color: var(--muted); font-size: 12px; }
+.coll-set.done .coll-set-head b { color: var(--hazard); }
+.coll-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.coll-cell { border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 4px 6px; text-align: center; background: rgba(255,255,255,.03); position: relative; }
+.coll-cell .cc-icon { font-size: 24px; display: block; }
+.coll-cell .cc-name { font-size: 11px; display: block; margin-top: 3px; line-height: 1.25; min-height: 28px; }
+.coll-cell .cc-count { position: absolute; top: 3px; right: 6px; font-size: 10px; color: var(--hazard); font-weight: 700; }
+.coll-cell.unlit { opacity: .42; }
+.coll-cell.unlit .cc-icon { filter: grayscale(1); }
+.coll-tier-title { margin: 14px 0 8px; font-size: 14px; }
+.ach-row { display: flex; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; margin-bottom: 8px; background: rgba(255,255,255,.03); }
+.ach-row .ach-icon { font-size: 22px; }
+.ach-row .ach-name { font-weight: 700; font-size: 14px; }
+.ach-row .ach-desc { color: var(--muted); font-size: 12px; }
+.ach-row.locked { opacity: .45; }
+.hist-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding: 7px 2px; font-size: 13px; }
+.hist-row .h-val { font-weight: 800; color: var(--hazard); }
+.hist-row.caught .h-val { color: var(--danger); }
+.hist-row .h-meta { color: var(--muted); font-size: 12px; }
+.unlock-note { border: 1.5px solid var(--hazard); border-radius: 10px; padding: 10px 12px; margin-top: 12px; background: rgba(245,185,33,.08); font-size: 14px; line-height: 1.7; }
+
+/* M3 经济 UI */
+.econ-line { margin: 10px 0 2px; padding: 8px 12px; font-size: 14px; text-align: center; }
+.econ-line b { color: var(--gold, #d4a017); }
+.wh-fee { display: block; font-size: 12px; opacity: .85; margin-top: 2px; }
+.wh-card.poor { opacity: .55; }
+.shop-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; padding: 9px 10px; margin: 6px 0; border: 1px solid rgba(255,255,255,.14); border-radius: 10px; background: rgba(255,255,255,.04); color: inherit; text-align: left; cursor: pointer; }
+.shop-row.sel { border-color: var(--gold, #d4a017); background: rgba(212,160,23,.12); }
+.shop-row.off { opacity: .45; cursor: default; }
+.shop-row .sr-name { font-weight: 700; }
+.shop-row .sr-desc { display: block; font-size: 12px; opacity: .75; font-weight: 400; }
+.shop-fee { padding: 8px 10px; margin: 6px 0; border-radius: 10px; background: rgba(255,255,255,.05); font-size: 14px; }
+.shop-total { text-align: right; font-weight: 700; padding: 4px 2px; }
+.coin-row b { color: var(--gold, #d4a017); }
+
+.mode-line { font-size: 15px; margin: 2px 0; }
+.mode-line small { display: block; opacity: .7; font-size: 12px; margin-top: 2px; }
+.shop-row.boost { border-color: rgba(212,160,23,.55); }
+
+.share-preview { width: 100%; border-radius: 12px; margin-top: 10px; }
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 首页 -->
+  <section id="screen-home" class="screen active">
+    <div class="hazard"></div>
+    <h1 class="logo">大金撤离</h1>
+    <p class="subtitle">再 贪 一 格</p>
+    <p class="fineprint" style="color:#7ee7ff;font-size:14px">🔓 破解版 · 瑰宝爆率拉满 · 起始仓币 9999 · 存档与正版完全独立</p>
+    <p class="tagline">逐格开箱，见好就收，还是再贪一格？<br>震动爆表塌架，只剩防震箱一件。</p>
+    <div class="records card">
+      <div class="rec"><span>历史最高带出</span><b id="rec-best">0 万</b></div>
+      <div class="rec"><span>累计成功带出</span><b id="rec-total">0 万</b></div>
+      <div class="rec"><span>累计防震保留</span><b id="rec-ins">0 万</b></div>
+      <div class="rec"><span>战绩</span><b id="rec-runs">0 局</b></div>
+    </div>
+    <div class="econ-line card" id="econ-line"></div>
+    <button id="btn-supply" class="btn-ghost">📺 每日补给 · 看广告 +40 🪙</button>
+    <p id="supply-note" class="fineprint"></p>
+    <div class="config-switch">
+      <span class="cs-label">模式</span>
+      <p class="mode-line">B 稀有 · 正赛<small>开局前看广告，可把本趟出击升级「爽局」（出货率大涨）；最佳纪录只认纯 B 局</small></p>
+    </div>
+    <button id="btn-start" class="btn-primary">开始寻宝</button>
+    <button id="btn-continue" class="btn-ghost hidden" style="width:100%;margin-top:10px">▶ 继续上局（未结束）</button>
+    <div class="home-nav">
+      <button id="btn-nav-collection" class="btn-ghost">📖 图鉴 <span id="nav-coll-count"></span></button>
+      <button id="btn-nav-ach" class="btn-ghost">🏆 成就 <span id="nav-ach-count"></span></button>
+      <button id="btn-nav-history" class="btn-ghost">📜 战绩</button>
+    </div>
+    <button id="btn-sound-home" class="btn-ghost sound-toggle">🔊 音效：开</button>
+    <button id="btn-desktop" class="btn-ghost hidden">📲 添加到桌面</button>
+    <p class="fineprint">规则全透明：震动每开一格 +5~9（按仓库），越深堆得越密；下一格风险按档明示（安全/低危/中危/高危/极危/必塌），震动越高塌架概率越大，塌架只剩防震箱一件。</p>
+  </section>
+
+  <!-- 选仓 -->
+  <section id="screen-warehouse" class="screen">
+    <h2 class="screen-title">选择仓库</h2>
+    <p class="screen-sub" id="wh-hint"></p>
+    <div id="warehouse-list"></div>
+    <!-- 局前商店（M3） -->
+    <div id="shop-modal" class="modal hidden">
+      <div class="modal-card">
+        <h3 id="shop-title">出发前准备</h3>
+        <div id="shop-body"></div>
+        <p id="shop-note" class="pending-note"></p>
+        <div class="modal-btns">
+          <button id="btn-shop-go" class="btn-primary">开始搜刮</button>
+          <button id="btn-shop-cancel" class="btn-ghost">再想想</button>
+        </div>
+      </div>
+    </div>
+    <button id="btn-wh-back" class="btn-ghost">← 返回</button>
+  </section>
+
+  <!-- 局内 -->
+  <section id="screen-run" class="screen">
+    <div class="hud card">
+      <div class="hud-row">
+        <div class="hud-item"><span>背包估值</span><b id="hud-value">0 万</b></div>
+        <div class="hud-item"><span>件数</span><b id="hud-count">0 件</b></div>
+        <div class="hud-item"><span>已开</span><b id="hud-opens">0/16</b></div>
+        <div class="hud-item"><span>深度</span><b id="hud-depth">浅层</b></div>
+      </div>
+      <div class="alert-head">
+        <span id="alert-stage">平稳</span>
+        <span id="alert-num">震动 0</span>
+        <span id="alert-next">下一格风险：安全</span>
+        <button id="btn-sound-run" class="sound-mini" title="音效开关">🔊</button>
+      </div>
+      <div class="alert-bar"><div id="alert-fill"></div><i class="tick" style="left:70%"></i><i class="tick danger" id="tick-gamble" style="left:92%"></i><i class="tick danger" id="tick-certain" style="left:95%"></i></div>
+      <p id="alert-warn" class="alert-warn"></p>
+      <p class="depth-hint">越深入仓库，高品质物资出现率越高，危险也在增加。</p>
+    </div>
+
+    <div id="cells" class="cells"></div>
+    <p id="event-line" class="event-line">点任意一格开始搜。</p>
+
+    <div class="bag-head"><span id="bag-title">背包（5×4）</span><span id="bag-cells-info">0/20 格</span></div>
+    <div id="bag" class="bag"></div>
+
+    <button id="btn-evac" class="btn-primary evac">带出 · 带走 0 万</button>
+    <button id="btn-smoke" class="btn-ghost hidden" style="width:100%;margin-top:8px">💨 减震垫 · 震动 −15</button>
+    <p class="seed-line">本局种子 <span id="run-seed"></span> · <span id="run-meta"></span></p>
+
+    <!-- 满仓待处置 -->
+    <div id="pending-modal" class="modal hidden">
+      <div class="modal-card">
+        <h3>背包满了！</h3>
+        <div id="pending-item" class="pending-item"></div>
+        <p id="pending-note" class="pending-note">这件放不下。丢几件腾位（每件 +5 震动），还是见好就收？</p>
+        <div id="discard-panel" class="hidden">
+          <div id="discard-list" class="discard-list"></div>
+          <p id="discard-info" class="pending-note"></p>
+          <div class="modal-btns">
+            <button id="btn-discard-confirm" class="btn-danger">确认丢弃</button>
+            <button id="btn-discard-cancel" class="btn-ghost">返回</button>
+          </div>
+        </div>
+        <div id="pending-btns" class="modal-btns col">
+          <button id="btn-pend-expand" class="btn-ghost">📺 看广告 · 临时扩容 +4 格</button>
+          <button id="btn-pend-discard" class="btn-primary">丢弃腾位</button>
+          <button id="btn-pend-abandon" class="btn-ghost">放弃这件，继续搜</button>
+          <button id="btn-pend-evac" class="btn-ghost">直接带走</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 结算 -->
+  <section id="screen-result" class="screen">
+    <div id="result-body"></div>
+    <div class="modal-btns"><button id="btn-chain" class="btn-primary hidden" style="flex:1">🔗 继续下一仓</button></div>
+    <canvas id="share-canvas" width="720" height="960"></canvas>
+    <img id="share-preview" class="share-preview hidden" alt="战绩图预览">
+    <p id="share-hint" class="post-note hidden">长按图片即可保存战绩图</p>
+    <div class="modal-btns">
+      <button id="btn-rescue" class="btn-ghost hidden">📺 看广告 · 多保一件</button>
+      <button id="btn-coinbonus" class="btn-ghost hidden">📺 看广告 · 本局仓币 +50%</button>
+    </div>
+    <p id="ad-note" class="fineprint"></p>
+    <div class="modal-btns">
+      <button id="btn-share" class="btn-ghost">保存战绩图</button>
+      <button id="btn-post" class="btn-ghost hidden">📣 发帖晒战绩</button>
+      <button id="btn-again" class="btn-primary">再来一局</button>
+    </div>
+    <p id="post-note" class="fineprint"></p>
+    <div class="modal-btns">
+      <button id="btn-result-warehouse" class="btn-ghost">换仓库</button>
+      <button id="btn-result-home" class="btn-ghost">回首页</button>
+    </div>
+  </section>
+
+  <!-- 图鉴（M2） -->
+  <section id="screen-collection" class="screen">
+    <h2 class="screen-title">图鉴</h2>
+    <p class="screen-sub" id="coll-summary"></p>
+    <div id="coll-body"></div>
+    <button class="btn-ghost back-home">← 返回</button>
+  </section>
+
+  <!-- 成就（M2） -->
+  <section id="screen-achievements" class="screen">
+    <h2 class="screen-title">成就</h2>
+    <p class="screen-sub" id="ach-summary"></p>
+    <div id="ach-body"></div>
+    <button class="btn-ghost back-home">← 返回</button>
+  </section>
+
+  <!-- 战绩历史（M2） -->
+  <section id="screen-history" class="screen">
+    <h2 class="screen-title">战绩历史</h2>
+    <p class="screen-sub">最近 30 局 · 带出记带出、塌架记防震保留</p>
+    <div id="hist-body"></div>
+    <button class="btn-ghost back-home">← 返回</button>
+  </section>
+
+  <div id="vignette"></div>
+  <div id="loot-pop" class="hidden"><div id="loot-pop-inner"></div></div>
+</div>
+<script>
+
+/* ===== src/config.js ===== */
+// 《大金撤离》唯一数值源（V0.3 冻结口径，与 tools/sim-configs.json 同构）
+// 改任何数值：先改 tools/sim-configs.json 跑模拟、回填 GAME_ECONOMY.md，再改这里。
+const SHARED = {
+  cellsPerWarehouse: 16,
+  backpackCols: 5,
+  backpackRows: 4,
+  // 塌架判定坡道（ADR-021）：[增后震动下限, 本格塌架概率]，取满足的最高档；<85 为 0，>=120 为 1
+  catchRamp: [[60, 0.02], [70, 0.05], [80, 0.12], [90, 0.25], [100, 0.45], [110, 0.70], [120, 1]], // ADR-022：危险区提前到约第 7-8 格
+  scareFromAlert: 60,
+  scareChance: 0.3,
+  scareAdd: 4,
+  depthAlertBonus: [0, 0, 1], // 深层（第 11 格起）每开一格震动额外 +1：深区堆得更密（ADR-020）
+  discardAlertPerItem: 5,
+  earlyEvacBonusBelowAlert: 40,
+  earlyEvacBonusRate: 0.05,
+  depthMult: [1, 1.35, 1.7],
+  // 占格分布（按档位 0-5）：格数 -> 概率
+  sizeDistByTier: {
+    0: { 1: 0.9, 2: 0.1 },
+    1: { 1: 0.75, 2: 0.25 },
+    2: { 1: 0.5, 2: 0.4, 3: 0.1 },
+    3: { 2: 0.7, 3: 0.2, 4: 0.1 },
+    4: { 2: 0.5, 3: 0.35, 4: 0.15 },
+    5: { 3: 0.5, 4: 0.5 },
+    6: { 1: 1 },
+  },
+  // 估值带（万）
+  valueBandsWan: { 0: [0.1, 0.5], 1: [0.5, 0.8], 2: [0.8, 2], 3: [2, 8], 4: [10, 30], 5: [80, 200], 6: [380, 600] },
+};
+
+function catchProbAt(alert) {
+  let p = 0;
+  for (const [t, r] of SHARED.catchRamp) if (alert >= t) p = r;
+  return p;
+}
+
+const TIER_NAMES = ['粗货', '良品', '稀有', '史诗', '传说', '大金', '瑰宝'];
+const TIER_KEYS = ['white', 'green', 'blue', 'purple', 'gold', 'red'];
+
+// 概率配置（ADR-026 定版）：B 为唯一基准模式（正赛）；A 不再是可选模式，而是「广告爽局」的内部概率表（看激励广告后本趟生效）
+const CONFIGS = {
+  A: {
+    id: 'A', label: 'A 爽局', desc: '出货率高，爽感直接',
+    tierWeights: { 0: 0.18, 1: 0.20, 2: 0.16, 3: 0.09, 4: 0.05, 5: 0.02, 6: 0.30 },
+    // 评级线按仓分线（ADR-027 定版）：各仓带出分位 p92/p75/p50，S≈8%/仓
+    ratingThresholdsWan: { normal: { S: 235, A: 170, B: 60 }, secret: { S: 305, A: 205, B: 125 }, topsecret: { S: 350, A: 235, B: 165 } },
+  },
+  B: {
+    id: 'B', label: 'B 稀有', desc: '大金稀有，晒图有面',
+    tierWeights: { 0: 0.20, 1: 0.20, 2: 0.15, 3: 0.08, 4: 0.04, 5: 0.03, 6: 0.30 },
+    ratingThresholdsWan: { normal: { S: 200, A: 115, B: 38 }, secret: { S: 225, A: 160, B: 56 }, topsecret: { S: 270, A: 195, B: 85 } },
+  },
+};
+const DEFAULT_CONFIG = 'B';
+
+// 仓库难度：weightMult 放大紫/金/红（公式同深度梯度），alertMin/Max 为本仓震动增量区间
+// 2026-10-30 难度模拟定版（ADR-019）：珍品仓震动由暂定 +6~9 校准为 +7~9，其余两仓暂定值验证通过转正
+const WAREHOUSES = [
+  { id: 'normal', name: '普通仓', tag: '社区旧仓 · 堆得还算稳', weightMult: 1, alertMin: 5, alertMax: 8, hint: '堆得不算高，货色一般' },
+  { id: 'secret', name: '精品仓', tag: '精品库房 · 堆得更高', weightMult: 1.6, alertMin: 6, alertMax: 9, hint: '好货明显变多，震动也涨得快' },
+  { id: 'topsecret', name: '珍品仓', tag: '珍品库房 · 堆到了天花板', weightMult: 2.4, alertMin: 8, alertMax: 10, hint: '大金扎堆，震动蹿得最快' },
+];
+
+// 把紫/金/红权重乘以 mult，增加量从白/绿按原比例扣除，蓝不变，结果归一
+function applyHighTierMult(weights, mult) {
+  if (mult === 1) return { ...weights };
+  const w = { ...weights };
+  let added = 0;
+  for (const t of [3, 4, 5]) { const d = w[t] * (mult - 1); w[t] += d; added += d; }
+  const base = w[0] + w[1];
+  w[0] -= added * (w[0] / base);
+  w[1] -= added * (w[1] / base);
+  return w;
+}
+
+// 当前开格序号（0 起）对应的深度倍率
+function depthMultAt(opens) {
+  const idx = Math.min(SHARED.depthMult.length - 1, Math.floor(opens / 5));
+  return SHARED.depthMult[idx];
+}
+function depthNameAt(opens) {
+  return ['浅层', '中层', '深层'][Math.min(2, Math.floor(opens / 5))];
+}
+
+// M3 经济系统（设计案 v0.2 冻结，ADR-025）：仓币折算/入场费/道具/连锁
+const ECONOMY = {
+  rateBands: [[0.05, 0.2], [0.25, 0.5], [0.55, 1.0], [Infinity, 1.5]], // 对未取整 R 查表
+  entryFees: { normal: 0, secret: 20, topsecret: 50 },
+  shop: {
+    smoke: { price: 30, name: '减震垫', desc: '局内使用：震动 −15，每局 1 个', alertCut: 15 },
+    expand: { price: 40, name: '扩容贴', desc: '本局背包 +2 格（20→22）', cells: 2 },
+    dualins: { price: 60, name: '双层防震', desc: '本局防震箱保最贵的两件' },
+  },
+  chainMult: [1, 1.15, 1.25, 1.3], // 按连锁仓序（1 起），第 4 仓起封顶
+  achievementCoin: 20,
+  setCoin: 100,
+  ads: { supplyCoins: 40, coinBonusRate: 0.5, expandCells: 4, recoveryCompCoins: 30 }, // ADR-032 广告位参数
+};
+function coinRateAt(R) {
+  for (const [t, r] of ECONOMY.rateBands) if (R < t) return r;
+  return ECONOMY.rateBands[ECONOMY.rateBands.length - 1][1];
+}
+function chainMultAt(leg) {
+  const i = Math.min(Math.max(1, leg) - 1, ECONOMY.chainMult.length - 1);
+  return ECONOMY.chainMult[i];
+}
+
+/* ===== src/rng.js ===== */
+// 可复现随机：mulberry32 + 五条独立随机流（与模拟器 v2 同口径）
+// 同一 seed 的整局流程可逐位复现，供测试与玩家复盘。
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function hashSeed(str) {
+  let h = 2166136261;
+  for (let i = 0; i < String(str).length; i++) {
+    h ^= String(str).charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+// 七条流：档位/估值/占格/震动/惊吓/选物/坡道判定，互不干扰
+function makeStreams(seed) {
+  const base = (seed >>> 0) * 100000;
+  return {
+    tier: mulberry32(base + 1),
+    value: mulberry32(base + 2),
+    size: mulberry32(base + 3),
+    alert: mulberry32(base + 4),
+    scare: mulberry32(base + 5),
+    item: mulberry32(base + 6),
+    luck: mulberry32(base + 7),
+  };
+}
+
+function pickWeighted(rnd, obj) {
+  let r = rnd(), acc = 0, last = null;
+  for (const [k, w] of Object.entries(obj)) { acc += w; last = k; if (r < acc) return k; }
+  return last;
+}
+
+/* ===== src/items.js ===== */
+// 物品表 v0.3：一期 40 件（白10/绿10/蓝8/紫6/金4/红2），全原创命名
+// schema: id/name/desc/tier(0-5)/icon/weight(仅同档池内权重) + 可选 valueMin/valueMax/sizeDist 覆写
+// 预留字段 setId/series/flavor 一期不填不开发（二期图鉴用）
+const ITEMS = [
+  // 白 · 粗货 ×10
+  { id: 'itm_001', name: '旧纸箱书', desc: '受潮的一箱旧书', tier: 0, icon: '📚', weight: 1 },
+  { id: 'itm_002', name: '生锈扳手', desc: '还能拧最后一颗螺丝', tier: 0, icon: '🔧', weight: 1 },
+  { id: 'itm_003', name: '过期罐头', desc: '过期三年的午餐肉', tier: 0, icon: '🥫', weight: 1 },
+  { id: 'itm_004', name: '旧雨伞', desc: '伞骨断了两根', tier: 0, icon: '☂️', weight: 1 },
+  { id: 'itm_005', name: '布娃娃', desc: '眼睛掉了一只', tier: 0, icon: '🧸', weight: 1 },
+  { id: 'itm_006', name: '废电线卷', desc: '铜芯还能卖个价', tier: 0, icon: '🔌', weight: 1 },
+  { id: 'itm_007', name: '铁皮饼干盒', desc: '里面只剩碎渣', tier: 0, icon: '🍪', weight: 1 },
+  { id: 'itm_008', name: '玻璃水杯', desc: '杯口有个豁', tier: 0, icon: '🥛', weight: 1 },
+  { id: 'itm_009', name: '旧台历', desc: '停在三年前那一页', tier: 0, icon: '📅', weight: 1, setId: 'set_paper' },
+  { id: 'itm_010', name: '塑料收纳盒', desc: '盖子找不到了', tier: 0, icon: '🗑️', weight: 1 },
+  // 绿 · 良品 ×10
+  { id: 'itm_011', name: '电动螺丝刀', desc: '电量还剩两格', tier: 1, icon: '🪛', weight: 1, setId: 'set_elec' },
+  { id: 'itm_012', name: '蓝牙小音箱', desc: '音质意外地能打', tier: 1, icon: '🔊', weight: 1 },
+  { id: 'itm_013', name: '机械键盘', desc: '青轴，敲起来脆', tier: 1, icon: '⌨️', weight: 1, setId: 'set_elec' },
+  { id: 'itm_014', name: '备用旧手机', desc: '屏没碎，能开机', tier: 1, icon: '📱', weight: 1, setId: 'set_elec' },
+  { id: 'itm_015', name: '电热水壶', desc: '烧水只要三分钟', tier: 1, icon: '🫖', weight: 1, setId: 'set_tea' },
+  { id: 'itm_016', name: '压箱羽绒服', desc: '吊牌都还没拆', tier: 1, icon: '🧥', weight: 1 },
+  { id: 'itm_017', name: '家用工具箱', desc: '钳子锤子一应俱全', tier: 1, icon: '🧰', weight: 1 },
+  { id: 'itm_018', name: '大容量充电宝', desc: '两万毫安，沉甸甸', tier: 1, icon: '🔋', weight: 1, setId: 'set_elec' },
+  { id: 'itm_019', name: '保温壶套装', desc: '一壶两杯，成套', tier: 1, icon: '🍶', weight: 1, setId: 'set_tea' },
+  { id: 'itm_020', name: '折叠车锁', desc: '钥匙还插在锁上', tier: 1, icon: '🔐', weight: 1 },
+  // 蓝 · 稀有 ×8
+  { id: 'itm_021', name: '老式收音机', desc: '旋钮一转全是回忆', tier: 2, icon: '📻', weight: 1, setId: 'set_elec' },
+  { id: 'itm_022', name: '胶片相机', desc: '镜头通透，快门清脆', tier: 2, icon: '📷', weight: 1, setId: 'set_optic' },
+  { id: 'itm_023', name: '老机械手表', desc: '上满弦还能走三天', tier: 2, icon: '⌚', weight: 1, setId: 'set_time' },
+  { id: 'itm_024', name: '游戏卡带盒', desc: '整盒正版卡带', tier: 2, icon: '🎮', weight: 1 },
+  { id: 'itm_025', name: '整本邮票册', desc: '八十年代的整版票', tier: 2, icon: '📮', weight: 1, setId: 'set_paper' },
+  { id: 'itm_026', name: '紫砂茶具', desc: '一壶四杯，包浆温润', tier: 2, icon: '🍵', weight: 1, setId: 'set_tea' },
+  { id: 'itm_027', name: '高倍望远镜', desc: '镜片镀膜完好', tier: 2, icon: '🔭', weight: 1, setId: 'set_optic' },
+  { id: 'itm_028', name: '黑胶唱片机', desc: '唱针落下，时光倒流', tier: 2, icon: '💿', weight: 1 },
+  // 紫 · 史诗 ×6
+  { id: 'itm_029', name: '绝版联名球鞋', desc: '鞋盒都在，尺码黄金', tier: 3, icon: '👟', weight: 1, sizeDist: { 2: 1 } },
+  { id: 'itm_030', name: '限量手办', desc: '未拆封，编号靠前', tier: 3, icon: '🎎', weight: 1, setId: 'set_curio' },
+  { id: 'itm_031', name: '陈年窖藏酒', desc: '封坛二十年的老酒', tier: 3, icon: '🏺', weight: 1, setId: 'set_tea' },
+  { id: 'itm_032', name: '翡翠摆件', desc: '水头足，灯下透绿', tier: 3, icon: '🗿', weight: 1, setId: 'set_curio' },
+  { id: 'itm_033', name: '古董座钟', desc: '整点还会敲钟', tier: 3, icon: '🕰️', weight: 1, setId: 'set_time' },
+  { id: 'itm_034', name: '名家字画卷', desc: '落款印章俱全', tier: 3, icon: '🖼️', weight: 1, setId: 'set_curio' },
+  // 金 · 传说 ×4
+  { id: 'itm_035', name: '纪念金币套', desc: '整套十二枚，带证书', tier: 4, icon: '🪙', weight: 1, setId: 'set_curio' },
+  { id: 'itm_036', name: '老式金表', desc: '表盘鎏金，沉手', tier: 4, icon: '⌚', weight: 1, setId: 'set_time' },
+  { id: 'itm_037', name: '钻石项链', desc: '火彩晃眼，真货', tier: 4, icon: '💎', weight: 1, setId: 'set_curio' },
+  { id: 'itm_038', name: '名贵相机镜头', desc: '收藏级老镜头', tier: 4, icon: '📸', weight: 1, setId: 'set_optic' },
+  // 红 · 大金 ×2
+  { id: 'itm_039', name: '馆藏级怀表', desc: '据说上过拍卖图录', tier: 5, icon: '🕰️', weight: 1, setId: 'set_time' },
+  { id: 'itm_040', name: '孤品邮票套', desc: '整套存世不过十套', tier: 5, icon: '✉️', weight: 1, setId: 'set_paper' },
+  // 瑰宝（tier 6）——破解版抢先体验（正版 v1.1 规划中）
+  { id: 'itm_041', name: '亚洲之心', desc: '传说中的巨钻，灯下不敢直视', tier: 6, icon: '🔷', weight: 1, valueMin: 450, valueMax: 600, sizeDist: { 4: 1 } },
+  { id: 'itm_042', name: '亚特兰蒂斯的眼泪', desc: '深海沉船里的深蓝宝石', tier: 6, icon: '💧', weight: 1, valueMin: 380, valueMax: 520, sizeDist: { 1: 1 } },
+];
+
+const ITEMS_BY_TIER = [0, 1, 2, 3, 4, 5, 6].map(t => ITEMS.filter(i => i.tier === t));
+
+// 套装（M2 图鉴）：24 件分 6 套，其余 16 件为散件、照样点亮收集
+const SETS = [
+  { id: 'set_time', name: '时计套装', desc: '表与钟的时间线' },
+  { id: 'set_optic', name: '光影套装', desc: '镜头与镜片' },
+  { id: 'set_tea', name: '茶酒套装', desc: '壶、杯与老酒' },
+  { id: 'set_paper', name: '纸品套装', desc: '纸上的年头' },
+  { id: 'set_elec', name: '电器套装', desc: '带电的老伙计' },
+  { id: 'set_curio', name: '珍玩套装', desc: '柜子里的宝贝' },
+];
+function setProgress(setId, collection) {
+  const members = ITEMS.filter(i => i.setId === setId);
+  const lit = members.filter(i => (collection[i.id] ?? 0) > 0).length;
+  return { lit, total: members.length, done: lit === members.length };
+}
+
+/* ===== src/sim/backpack.js ===== */
+// 背包摆放：确定性首适（行优先、默认朝向→旋转）+ 满载前确定性重排救援
+// 与 tools/montecarlo.mjs v2 同一算法，禁止在别处另写一套。
+
+const SHAPES = { 1: [[1, 1]], 2: [[2, 1], [1, 2]], 3: [[3, 1], [1, 3]], 4: [[2, 2]] };
+
+function newGrid(rows = SHARED.backpackRows) {
+  return Array.from({ length: rows }, () => Array(SHARED.backpackCols).fill(false));
+}
+
+// 在给定 grid 上尝试摆放 size 格物品；成功返回占用的 cells 并就地标记，失败返回 null（grid 不变）
+function tryPlaceOn(grid, size) {
+  for (const [w, h] of SHAPES[size]) {
+    for (let y = 0; y + h <= grid.length; y++) {
+      for (let x = 0; x + w <= SHARED.backpackCols; x++) {
+        let ok = true;
+        for (let dy = 0; dy < h && ok; dy++)
+          for (let dx = 0; dx < w; dx++) if (grid[y + dy][x + dx]) ok = false;
+        if (ok) {
+          const cells = [];
+          for (let dy = 0; dy < h; dy++)
+            for (let dx = 0; dx < w; dx++) { grid[y + dy][x + dx] = true; cells.push([x + dx, y + dy]); }
+          return cells;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// 重排救援：全部物品按占格降序、估值降序重摆；成功返回 {grid, placed}（placed 为带 cells 的新数组），失败返回 null
+function repack(items, rows = SHARED.backpackRows, blocked = []) {
+  const sorted = [...items].sort((a, b) => b.size - a.size || b.value - a.value);
+  const grid = newGrid(rows);
+  for (const [x, y] of blocked) grid[y][x] = true; // 扩容贴的不可用格（幻影行尾格），重排后仍不可用
+  const placed = [];
+  for (const it of sorted) {
+    const cells = tryPlaceOn(grid, it.size);
+    if (!cells) return null;
+    placed.push({ ...it, cells });
+  }
+  return { grid, placed };
+}
+
+function freeCells(grid, cells) {
+  for (const [x, y] of cells) grid[y][x] = false;
+}
+
+function usedCells(bag) {
+  return bag.reduce((s, i) => s + i.size, 0);
+}
+
+/* ===== src/sim/generator.js ===== */
+// 物品生成：抽档（仓库倍率×深度梯度）→ 同档池按 weight 选物 → 估值带抽值 → 占格分布抽形状
+
+function effectiveWeights(config, warehouse, opens) {
+  let w = applyHighTierMult(config.tierWeights, warehouse.weightMult);
+  w = applyHighTierMult(w, depthMultAt(opens));
+  return w;
+}
+
+function genItem(streams, config, warehouse, opens) {
+  const w = effectiveWeights(config, warehouse, opens);
+  const tier = Number(pickWeighted(streams.tier, w));
+  const pool = ITEMS_BY_TIER[tier];
+  const totalW = pool.reduce((s, i) => s + i.weight, 0);
+  let r = streams.item() * totalW, chosen = pool[pool.length - 1];
+  for (const it of pool) { r -= it.weight; if (r < 0) { chosen = it; break; } }
+  const band = [chosen.valueMin ?? SHARED.valueBandsWan[tier][0], chosen.valueMax ?? SHARED.valueBandsWan[tier][1]];
+  const value = band[0] + streams.value() * (band[1] - band[0]);
+  const size = Number(pickWeighted(streams.size, chosen.sizeDist ?? SHARED.sizeDistByTier[tier]));
+  return {
+    itemId: chosen.id, name: chosen.name, desc: chosen.desc, icon: chosen.icon,
+    tier, value: Math.round(value * 10) / 10, size,
+  };
+}
+
+/* ===== src/sim/state.js ===== */
+// 局状态机（纯逻辑、无 DOM）：选仓后创建，phase: playing -> pending(满仓待处置) -> over
+// 规则口径：GAME_RULES（R1 时序、R2 防震标记、R3 摆放/重排、丢弃 +5/件；塌架判定为概率坡道，ADR-021）
+
+class Run {
+  constructor({ config, warehouse, seed, extraCells = 0, dualInsurance = false, smokeBombs = 0, chainLeg = 1, runId = null, boosted = false }) {
+    this.boosted = boosted; // 广告爽局（ADR-026）：config 已是生效概率表（爽局=A），此标记供纪录口径与展示
+    this.baseExtraCells = extraCells; // 开局扩容（检查点口径：局内广告扩容靠动作日志回放，不进构造参数）
+    this.adExpanded = false; // 广告临时扩容（ADR-032）：用过的局打助力标，最佳纪录不认
+    this.config = config;
+    this.warehouse = warehouse;
+    this.seed = seed;
+    this.streams = makeStreams(seed);
+    this.alert = 0;
+    this.opens = 0;
+    this.cellsOpened = new Array(SHARED.cellsPerWarehouse).fill(false);
+    // M3 扩容贴：+2 格 = 幻影第 5 行只开放前 2 格，其余预标记为不可用（摆放/重排都绕开）
+    this.bagRows = SHARED.backpackRows + (extraCells > 0 ? 1 : 0);
+    this.bagCapacity = SHARED.backpackCols * SHARED.backpackRows + extraCells;
+    this.blockedCells = [];
+    if (extraCells > 0) {
+      const total = this.bagRows * SHARED.backpackCols;
+      for (let k = this.bagCapacity; k < total; k++)
+        this.blockedCells.push([k % SHARED.backpackCols, Math.floor(k / SHARED.backpackCols)]);
+    }
+    this.grid = newGrid(this.bagRows);
+    for (const [x, y] of this.blockedCells) this.grid[y][x] = true;
+    this.bag = [];           // {uid, itemId, name, desc, icon, tier, value, size, cells}
+    this.insuranceCount = dualInsurance ? 2 : 1; // M3 双层防震
+    this.insuredUid = null;  // R2：只是标记，物品仍占格（insuredUids 为现行多件口径）
+    this.insuredUids = [];
+    this.smoke = smokeBombs;         // M3 减震垫（局内可用次数）
+    this.chainLeg = chainLeg;        // M3 连锁仓序（1 起）
+    this.chainAlertBonus = chainLeg - 1; // 第 n 仓每格震动增量 +(n−1)
+    this.surv = 1;                   // M3 累计风险：生存概率连乘，R = 1 − surv（每仓独立，构造即重置）
+    this.runId = runId ?? `${seed}-${Date.now()}`;
+    this.gross = 0;          // 搜获总值 G
+    this.hasRed = false;
+    this.discards = 0;
+    this.pending = null;     // 满仓待处置物品
+    this.reveals = [];       // 本局揭示过的物品（M2 图鉴点亮口径：揭示即点亮）
+    this.phase = 'playing';  // playing | pending | over
+    this.outcome = null;     // evac | cleared | caught
+    this.uidSeq = 1;         // 局内计数器：同种子整局逐位可复现（含 uid）
+    this.actionLog = [];     // 玩家动作日志（局内重载恢复用：确定性回放重建整局）
+    this.cellItems = {};     // 格号 → 揭示过的物品（恢复时重绘已开格用；塌架格不揭示故不记录）
+    this.startedAt = Date.now();
+  }
+
+  bagValue() { return this.bag.reduce((s, i) => s + i.value, 0); }
+  insuredItem() { return this.bag.find(i => i.uid === this.insuredUid) ?? null; }
+
+  refreshInsurance() {
+    const sorted = [...this.bag].sort((a, b) => b.value - a.value);
+    this.insuredUids = sorted.slice(0, this.insuranceCount).map(i => i.uid);
+    this.insuredUid = this.insuredUids[0] ?? null;
+  }
+  insuredItems() {
+    return this.bag.filter(i => this.insuredUids.includes(i.uid)).sort((a, b) => b.value - a.value);
+  }
+
+  // 广告临时扩容（ADR-032）：满仓待决时 +4 格并重试放下 pending；每局限 1 次，动作入日志可回放
+  expandBagAd() {
+    if (this.phase !== 'pending' || !this.pending || this.adExpanded) return { placed: false };
+    this.actionLog.push(['expand']);
+    this.adExpanded = true;
+    this.bagCapacity += ECONOMY.ads.expandCells;
+    this.bagRows = Math.ceil(this.bagCapacity / SHARED.backpackCols);
+    this.blockedCells = [];
+    const total = this.bagRows * SHARED.backpackCols;
+    for (let k = this.bagCapacity; k < total; k++)
+      this.blockedCells.push([k % SHARED.backpackCols, Math.floor(k / SHARED.backpackCols)]);
+    this.grid = newGrid(this.bagRows);
+    for (const [x, y] of this.blockedCells) this.grid[y][x] = true;
+    for (const it of this.bag) for (const [x, y] of it.cells) this.grid[y][x] = true;
+    const item = this.pending;
+    if (this.place(item)) { this.pending = null; this.phase = 'playing'; return { placed: true }; }
+    return { placed: false };
+  }
+
+  // M3 减震垫：只降当前震动，surv（已累计风险 R）不回滚
+  useSmoke() {
+    if (this.phase === 'over' || this.smoke <= 0) return false;
+    this.actionLog.push(['smoke']);
+    this.smoke -= 1;
+    this.alert = Math.max(0, this.alert - ECONOMY.shop.smoke.alertCut);
+    return true;
+  }
+
+  // 尝试把 item 放进背包（首适→重排），成功返回 true
+  place(item) {
+    const entry = { ...item, uid: this.uidSeq++ };
+    let cells = tryPlaceOn(this.grid, entry.size);
+    if (cells) { entry.cells = cells; this.bag.push(entry); this.refreshInsurance(); return true; }
+    const rp = repack([...this.bag, entry], this.bagRows, this.blockedCells);
+    if (rp) { this.grid = rp.grid; this.bag = rp.placed; this.refreshInsurance(); return true; }
+    return false;
+  }
+
+  // 本格塌架概率期望（UI 风险档用）：对增量均匀分布求坡道概率的期望
+  nextCaughtProb() {
+    const { alertMin, alertMax } = this.warehouse;
+    const bonus = SHARED.depthAlertBonus[Math.min(2, Math.floor(this.opens / 5))];
+    const n = alertMax - alertMin + 1;
+    let sum = 0;
+    for (let d = alertMin; d <= alertMax; d++) sum += catchProbAt(this.alert + d + bonus + this.chainAlertBonus);
+    return sum / n;
+  }
+
+  openCell(idx) {
+    if (this.phase !== 'playing' || this.cellsOpened[idx]) return { type: 'ignored' };
+    this.actionLog.push(['open', idx]);
+    // R1-②③：先抽增量并累加（深层区另有固定加成，计入 inc 一并展示）
+    const { alertMin, alertMax } = this.warehouse;
+    const depthBonus = SHARED.depthAlertBonus[Math.min(2, Math.floor(this.opens / 5))];
+    const inc = alertMin + Math.floor(this.streams.alert() * (alertMax - alertMin + 1)) + depthBonus + this.chainAlertBonus;
+    this.alert += inc;
+    // 坡道判定（ADR-021）：按增后震动掷骰，掷中当场塌架、本格不揭示；震动可超过 100
+    { const p = catchProbAt(this.alert); if (p > 0) { this.surv *= (1 - p); if (this.streams.luck() < p) return this.doCaught(inc); } } // M3：实际执行检定即计入 R（与骰果无关）
+    // R1-⑤：揭示
+    this.cellsOpened[idx] = true;
+    this.opens++;
+    const item = genItem(this.streams, this.config, this.warehouse, this.opens - 1);
+    this.cellItems[idx] = item;
+    this.reveals.push({ itemId: item.itemId, name: item.name, tier: item.tier });
+    this.gross += item.value;
+    if (item.tier === 5) this.hasRed = true;
+    // 惊吓事件：震动≥60 后 30% 概率 +4（只加震动）
+    let scared = false;
+    if (this.alert >= SHARED.scareFromAlert && this.streams.scare() < SHARED.scareChance) {
+      this.alert += SHARED.scareAdd; scared = true;
+    }
+    if (this.place(item)) {
+      const done = this.opens >= SHARED.cellsPerWarehouse;
+      if (done) return { type: 'item', item, inc, scared, cleared: true, result: this.finishRun('cleared') };
+      return { type: 'item', item, inc, scared };
+    }
+    this.pending = item;
+    this.phase = 'pending';
+    return { type: 'full', item, inc, scared };
+  }
+
+  // 丢弃腾位（pending 阶段）：uids 为要丢弃的背包物品；返回是否已放下 pending
+  discard(uids) {
+    if (this.phase !== 'pending' || !this.pending) return { placed: false };
+    const drop = this.bag.filter(i => uids.includes(i.uid));
+    if (!drop.length) return { placed: false };
+    this.actionLog.push(['discard', [...uids]]);
+    for (const d of drop) freeCells(this.grid, d.cells);
+    this.bag = this.bag.filter(i => !uids.includes(i.uid));
+    this.discards += drop.length;
+    this.alert += SHARED.discardAlertPerItem * drop.length;
+    this.refreshInsurance(); // R2：防震件被丢则标记转移到当前最贵
+    const item = this.pending;
+    if (this.place(item)) { this.pending = null; this.phase = 'playing'; return { placed: true, dropped: drop.length }; }
+    return { placed: false, dropped: drop.length };
+  }
+
+  abandonPending() {
+    if (this.phase !== 'pending') return;
+    this.actionLog.push(['abandon']);
+    this.pending = null;
+    this.phase = 'playing';
+  }
+
+  evacuate() {
+    if (this.phase === 'over') return null;
+    this.actionLog.push(['evac']);
+    return this.finishRun(this.opens >= SHARED.cellsPerWarehouse ? 'cleared' : 'evac');
+  }
+
+  doCaught(inc) {
+    this.phase = 'over';
+    this.outcome = 'caught';
+    return { type: 'caught', inc, result: this.buildResult() };
+  }
+
+  finishRun(outcome) {
+    this.phase = 'over';
+    this.outcome = outcome;
+    return this.buildResult();
+  }
+
+  buildResult() {
+    const G = Math.round(this.gross * 10) / 10;
+    const items = [...this.bag].sort((a, b) => b.value - a.value);
+    const topItem = items[0] ?? null;
+    const riskR = 1 - this.surv;
+    const coinRate = coinRateAt(riskR);
+    const chainMult = chainMultAt(this.chainLeg);
+    if (this.outcome === 'caught') {
+      const insItems = this.insuredItems();
+      const I = Math.round(insItems.reduce((s2, i) => s2 + i.value, 0) * 10) / 10;
+      return {
+        outcome: 'caught', G, C: I, I, bonus: 0,
+        final: I, rating: null, insuredItem: insItems[0] ?? null, insuredItems: insItems, topItem,
+        opens: this.opens, items, hasRed: this.hasRed, seed: this.seed, reveals: this.reveals,
+        warehouse: this.warehouse, config: this.config, alert: this.alert,
+        riskR, coinRate, chainMult, coinsGained: 0, chainLeg: this.chainLeg, runId: this.runId, boosted: this.boosted, adExpanded: this.adExpanded,
+      };
+    }
+    const C = Math.round(this.bagValue() * 10) / 10;
+    const bonus = this.alert < SHARED.earlyEvacBonusBelowAlert ? Math.round(C * SHARED.earlyEvacBonusRate * 10) / 10 : 0;
+    return {
+      outcome: this.outcome, G, C, I: 0, bonus, final: Math.round((C + bonus) * 10) / 10,
+      rating: rateOf(C, this.config.ratingThresholdsWan[this.warehouse.id]), insuredItem: this.insuredItem(), insuredItems: this.insuredItems(), topItem,
+      opens: this.opens, items, hasRed: this.hasRed, seed: this.seed, reveals: this.reveals,
+      warehouse: this.warehouse, config: this.config, alert: this.alert,
+      // M3 仓币：基数只认原始带出 C（不含早撤加成/广告加成），整仓向下取整一次
+      riskR, coinRate, chainMult, coinsGained: Math.floor(C * coinRate * chainMult), chainLeg: this.chainLeg, runId: this.runId, boosted: this.boosted, adExpanded: this.adExpanded,
+    };
+  }
+
+  snapshot() {
+    return {
+      phase: this.phase, outcome: this.outcome, alert: this.alert, opens: this.opens,
+      bagValue: this.bagValue(), bagCount: this.bag.length, gross: this.gross,
+      pending: this.pending?.name ?? null, seed: this.seed,
+      config: this.config.id, warehouse: this.warehouse.id, nextCaughtProb: this.nextCaughtProb(),
+      riskR: 1 - this.surv, smoke: this.smoke, chainLeg: this.chainLeg, bagCapacity: this.bagCapacity, boosted: this.boosted, adExpanded: this.adExpanded, coinsPreview: this.phase === 'over' ? null : Math.floor(this.bagValue() * coinRateAt(1 - this.surv) * chainMultAt(this.chainLeg)),
+    };
+  }
+}
+
+function rateOf(carried, th) {
+  if (carried >= th.S) return 'S';
+  if (carried >= th.A) return 'A';
+  if (carried >= th.B) return 'B';
+  return 'C';
+}
+
+// 局内恢复：同构造参数 + 动作日志回放，逐位重建中断前的 Run（引擎确定性保证，ADR-017 口径）
+// 回放后 phase 为 over 说明该局其实已结算（检查点未及清除），调用方应丢弃检查点
+function restoreRun(ctorOpts, actions) {
+  const run = new Run(ctorOpts);
+  for (const [kind, arg] of actions) {
+    if (kind === 'open') run.openCell(arg);
+    else if (kind === 'discard') run.discard(arg);
+    else if (kind === 'abandon') run.abandonPending();
+    else if (kind === 'smoke') run.useSmoke();
+    else if (kind === 'expand') run.expandBagAd();
+    else if (kind === 'evac') run.evacuate();
+    if (run.phase === 'over') break;
+  }
+  return run;
+}
+
+/* ===== src/platform.js ===== */
+// 虎扑容器（ColorboxAI）平台能力接入——全部做特性检测：
+// 无容器（Pages/本地/其他浏览器）时静默降级，原有行为不变。
+// 接口口径以官方技能包文档为准（cloud-save / result-poster-posting / add-to-desktop / auth-get-user-info）。
+const CB = () => (typeof window !== 'undefined' ? window.ColorboxAI : undefined);
+
+function inContainer() { return !!CB(); }
+
+// ---------- 云存档：本地存档写穿镜像；本地为空时开机从云端恢复（换设备/清缓存不丢进度） ----------
+const CLOUD_KEY = 'dajin_save_cheat';
+
+function mirrorCloudSave(save) {
+  const cb = CB();
+  if (!cb || typeof cb.cloudSave?.setValue !== 'function') return;
+  try {
+    const p = cb.cloudSave.setValue({ key: CLOUD_KEY, value: JSON.stringify(save) });
+    if (p && p.catch) p.catch(() => { /* 镜像失败不阻塞游戏，下次写入再同步 */ });
+  } catch { /* 同上 */ }
+}
+
+async function restoreCloudSaveIfLocalEmpty(local) {
+  const cb = CB();
+  if (!cb || typeof cb.cloudSave?.getValue !== 'function') return null;
+  if ((local.runs ?? 0) > 0 || (local.totalCarried ?? 0) > 0) return null; // 本地已有进度，绝不覆盖
+  try {
+    const res = await cb.cloudSave.getValue({ key: CLOUD_KEY });
+    if (res && res.code === 200 && res.data) {
+      const cloud = JSON.parse(res.data);
+      if (cloud && (cloud.runs ?? 0) > 0) return cloud;
+    }
+  } catch { /* 恢复失败按新档处理 */ }
+  return null;
+}
+
+// ---------- 结果海报发帖：Canvas Blob → OSS 上传 → 唤起发帖编辑器（预填标题/正文/图） ----------
+async function postResultPoster({ blob, title, content }) {
+  const cb = CB();
+  if (!cb || typeof cb.oss?.uploadFile !== 'function' || typeof cb.request?.bbs?.openPostEditor !== 'function') {
+    return { ok: false, message: '当前环境不支持发帖，请在虎扑 App 内使用' };
+  }
+  let up;
+  try { up = await cb.oss.uploadFile({ file: blob, filename: 'dajin-cheli-poster.png' }); }
+  catch (e) { return { ok: false, message: e?.message || '海报上传失败，请重试' }; }
+  const imageUrl = up?.downloadUrl;
+  if (!imageUrl) return { ok: false, message: up?.message || '海报上传失败，请重试' };
+  const params = { title, content, imageUrl };
+  try {
+    const bbs = cb.bbsConfig && await cb.bbsConfig.get();
+    if (bbs && typeof bbs.bbsTagId === 'string' && bbs.bbsTagId.trim() !== '') {
+      params.topicId = bbs.bbsTopicId;
+      params.tagId = bbs.bbsTagId;
+      params.topicName = bbs.bbsTopicName;
+      params.tagName = bbs.bbsTagName;
+    }
+  } catch { /* 话题配置读取失败则不带话题发帖 */ }
+  let res;
+  try { res = await cb.request.bbs.openPostEditor(params); }
+  catch (e) { return { ok: false, message: e?.message || '发帖编辑器打开失败' }; }
+  if (!res || res.code !== 200) return { ok: false, message: res?.message || '发帖编辑器打开失败' };
+  return { ok: true };
+}
+
+async function fetchNickname() {
+  const cb = CB();
+  if (!cb || typeof cb.auth?.getUserInfo !== 'function') return null;
+  try {
+    const r = await cb.auth.getUserInfo();
+    if (r && r.code === 200 && r.data && r.data.nickname) return r.data.nickname;
+  } catch { /* 取不到昵称就匿名发帖 */ }
+  return null;
+}
+
+// ---------- 添加到桌面（仅用户点击触发；结果语义按官方技能包口径） ----------
+function desktopAvailable() {
+  const cb = CB();
+  return !!cb && typeof cb.addToDesktop === 'function';
+}
+
+async function addToDesktop() {
+  const cb = CB();
+  if (!desktopAvailable()) return { state: 'unsupported', message: '请在虎扑 App 内使用' };
+  let res;
+  try { res = await cb.addToDesktop(); }
+  catch (e) { return { state: 'error', message: e?.message || '添加到桌面失败，请稍后重试' }; }
+  if (!res || res.code !== 200) return { state: 'error', message: res?.message || '添加到桌面失败，请稍后重试' };
+  const d = res.data || {};
+  if (d.alreadyAdded === true) return { state: 'already', message: '已添加过，请勿重复添加' };
+  const br = d.bridgeResult;
+  if (br && br.result === false) return { state: 'error', message: br.errorMsg || '添加到桌面失败，请稍后重试' };
+  if (br && br.result === true && d.platform === 'android') return { state: 'added', message: '已添加到桌面' };
+  return { state: 'silent', message: '' }; // 其他平台/回调为空：保持静默
+}
+
+// ---------- 全屏顶部安全适配（colorbox-fullscreen-safe-top 规范，ADR-033） ----------
+// 规范口径：初始化后调用 getFullscreenSafeTop()（同步、无参、CSS px、取不到为 0），
+// 同一内容只避让一次。本实现把安全距写入全局 CSS 变量 --safe-top，
+// 由 #app 与两个 fixed 弹窗各自的 padding-top 引用一次 —— 变量赋值幂等，
+// 多个时机重复调用不会叠加留白；本地/宿主外变量保持 0，显示不变。
+function applySafeTop() {
+  try {
+    const cb = CB();
+    if (cb && typeof cb.getFullscreenSafeTop === 'function') {
+      const h = cb.getFullscreenSafeTop();
+      if (typeof h === 'number' && h > 0) {
+        document.documentElement.style.setProperty('--safe-top', `${h}px`);
+      }
+    }
+  } catch { /* 宿主外忽略 */ }
+}
+
+/* ===== src/save.js ===== */
+// localStorage 存档 v3：纪录三分（最高成功带出 / 累计成功带出 / 累计防震保留，永不混）
+// + M2 收藏层：图鉴 collection{itemId: 揭示次数}、成就 achievements[id]、战绩历史 history（最新在前，上限 30）
+// + M3 经济：仓币 coins、一次性体验券 vouchers（凭 vouchersGranted 只发一次）、产/耗币累计、runId 幂等
+
+const KEY = 'dajin_save_cheat';
+const KEY_V2 = 'dajin_save_cheat_v2';
+const KEY_V1 = 'dajin_save_cheat_v1';
+const DEFAULTS = {
+  bestCarried: 0, totalCarried: 0, totalInsurance: 0,
+  runs: 0, evacs: 0, caughts: 0, redRuns: 0, configName: 'B', soundOn: true,
+  collection: {}, achievements: [], history: [],
+  coins: 9999, vouchers: { secret: 1, topsecret: 1 }, vouchersGranted: true,
+  coinsEarned: 0, coinsSpent: 0, setsRewarded: [], lastRunId: null,
+  lastSupplyDay: null, lastAdCoinRunId: null, lastAdClaimTs: null, // ADR-032：每日补给日期 / 结算广告加成与补发幂等
+};
+
+const freshDefaults = () => JSON.parse(JSON.stringify(DEFAULTS)); // 深拷贝：防嵌套对象（vouchers/collection 等）与 DEFAULTS 共享引用被写穿
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) return { ...freshDefaults(), ...JSON.parse(raw) };
+    for (const oldKey of [KEY_V2, KEY_V1]) { // v2/v1 → v3 自动迁移（纪录/收藏不丢，体验券随迁移首发一次）
+      const old = localStorage.getItem(oldKey);
+      if (old) {
+        const migrated = { ...freshDefaults(), ...JSON.parse(old) };
+        storeSave(migrated);
+        return migrated;
+      }
+    }
+  } catch { /* 解析失败降级新档 */ }
+  return freshDefaults();
+}
+
+// ---- M3 经济出纳（入场费/道具购买；券优先，扣费只在开局提交时调用） ----
+function entryFeeOf(warehouseId) { return ECONOMY.entryFees[warehouseId] ?? 0; }
+function payEntry(save, warehouseId) {
+  const fee = entryFeeOf(warehouseId);
+  if (fee <= 0) return 'free';
+  if ((save.vouchers[warehouseId] ?? 0) > 0) { save.vouchers[warehouseId] -= 1; storeSave(save); return 'voucher'; }
+  if (save.coins >= fee) { save.coins -= fee; save.coinsSpent += fee; storeSave(save); return 'coins'; }
+  return null;
+}
+function refundEntry(save, warehouseId, method) {
+  if (method === 'voucher') save.vouchers[warehouseId] = (save.vouchers[warehouseId] ?? 0) + 1;
+  else if (method === 'coins') { const fee = entryFeeOf(warehouseId); save.coins += fee; save.coinsSpent -= fee; }
+  else return;
+  storeSave(save);
+}
+function buyShopItem(save, key) {
+  const price = ECONOMY.shop[key]?.price ?? 0;
+  if (save.coins < price) return false;
+  save.coins -= price; save.coinsSpent += price; storeSave(save); return true;
+}
+function refundShopItem(save, key) {
+  const price = ECONOMY.shop[key]?.price ?? 0;
+  save.coins += price; save.coinsSpent -= price; storeSave(save);
+}
+
+function storeSave(save) {
+  try { localStorage.setItem(KEY, JSON.stringify(save)); } catch { /* 容器不支持时降级为内存态 */ }
+  mirrorCloudSave(save); // 虎扑容器内同步一份云存档（无容器时 platform 内部静默跳过）
+}
+
+const ACHIEVEMENTS = [
+  { id: 'first_evac', name: '初次带出', desc: '完成第一次带出' },
+  { id: 'first_caught', name: '初尝坍塌', desc: '第一次遇上货架塌（没事，人人都有）' },
+  { id: 'rating_s', name: 'S 级猎手', desc: '单局评级达到 S' },
+  { id: 'carry_100', name: '单局百万', desc: '单局带出 ≥100 万' },
+  { id: 'red_out', name: '大金到手', desc: '带着一件大金成功带出' },
+  { id: 'red_caught', name: '煮熟的鸭子', desc: '摸到大金却塌架了' },
+  { id: 'full_bag', name: '满载而归', desc: '背包塞满 20 格并带出' },
+  { id: 'topsecret_evac', name: '珍品凯旋', desc: '在珍品仓成功带出' },
+  { id: 'cleared', name: '整仓搬空', desc: '开满 16 格并带出' },
+  { id: 'total_1000', name: '累计千万', desc: '累计成功带出 ≥1000 万' },
+  { id: 'coll_20', name: '图鉴过半', desc: '点亮 20 件图鉴' },
+  { id: 'coll_40', name: '大收藏家', desc: '点亮全部 40 件图鉴' },
+  { id: 'set_1', name: '成套了', desc: '集齐任意一个套装' },
+];
+
+// 纪录口径：评级/最高纪录只认带出局带出价值 C（不含加成）；防震保留单独入账
+// 返回 { save, unlocked, runCoins, bonusCoins }：仓币分列（本局折算 / 成就套装奖励）；同 runId 重复调用幂等跳过
+function recordResult(save, result) {
+  if (result.runId && save.lastRunId === result.runId) return { save, unlocked: [], runCoins: 0, bonusCoins: 0, dup: true };
+  if (result.runId) save.lastRunId = result.runId;
+  save.runs += 1;
+  if (result.hasRed) save.redRuns += 1;
+  if (result.outcome === 'caught') {
+    save.caughts += 1;
+    save.totalInsurance += result.I;
+  } else {
+    save.evacs += 1;
+    save.totalCarried += result.C;
+    // ADR-026/032：最佳纪录（荣誉）只认无广告助力的局；爽局/广告扩容照常计累计/仓币/图鉴，但不上最佳榜
+    if (!result.boosted && !result.adExpanded && result.C > save.bestCarried) save.bestCarried = result.C;
+  }
+  if (!result.boosted) save.configName = result.config.id;
+  // 图鉴：揭示即点亮并累计次数（塌架/丢弃过的也算摸到过）
+  for (const r of result.reveals ?? []) save.collection[r.itemId] = (save.collection[r.itemId] ?? 0) + 1;
+  // 战绩历史
+  save.history.unshift({
+    t: Date.now(), outcome: result.outcome,
+    value: result.outcome === 'caught' ? result.I : result.C,
+    rating: result.rating, warehouse: result.warehouse.id, config: result.config.id,
+    opens: result.opens, hasRed: result.hasRed, boosted: !!result.boosted, assisted: !!result.adExpanded,
+  });
+  save.history = save.history.slice(0, 30);
+  // 成就判定（基于入账后的累计状态 + 本局结果）
+  const lit = Object.keys(save.collection).length;
+  const setDone = SETS.some(st => ITEMS.filter(i => i.setId === st.id).every(i => (save.collection[i.id] ?? 0) > 0));
+  const bagCells = (result.items ?? []).reduce((sum, i) => sum + (i.cells?.length ?? i.size ?? 0), 0);
+  const checks = {
+    first_evac: save.evacs >= 1,
+    first_caught: save.caughts >= 1,
+    rating_s: result.rating === 'S',
+    carry_100: result.outcome !== 'caught' && result.C >= 100,
+    red_out: result.outcome !== 'caught' && (result.items ?? []).some(i => i.tier === 5),
+    red_caught: result.outcome === 'caught' && result.hasRed,
+    full_bag: result.outcome !== 'caught' && bagCells >= 20,
+    topsecret_evac: result.outcome !== 'caught' && result.warehouse.id === 'topsecret',
+    cleared: result.outcome === 'cleared',
+    total_1000: save.totalCarried >= 1000,
+    coll_20: lit >= 20,
+    coll_40: lit >= ITEMS.length,
+    set_1: setDone,
+  };
+  const unlocked = [];
+  for (const a of ACHIEVEMENTS) {
+    if (checks[a.id] && !save.achievements.includes(a.id)) { save.achievements.push(a.id); unlocked.push(a); }
+  }
+  // M3 仓币入账：本局折算（仅带出局，result.coinsGained 塌架恒 0）+ 一次性奖励（成就 20/项、套装集齐 100/套）
+  let runCoins = 0;
+  if (result.outcome !== 'caught') {
+    runCoins = result.coinsGained ?? 0;
+    save.coins += runCoins; save.coinsEarned += runCoins;
+  }
+  let bonusCoins = unlocked.length * ECONOMY.achievementCoin;
+  for (const st of SETS) {
+    const done = ITEMS.filter(i => i.setId === st.id).every(i => (save.collection[i.id] ?? 0) > 0);
+    if (done && !save.setsRewarded.includes(st.id)) { save.setsRewarded.push(st.id); bonusCoins += ECONOMY.setCoin; }
+  }
+  if (bonusCoins > 0) { save.coins += bonusCoins; save.coinsEarned += bonusCoins; }
+  storeSave(save);
+  return { save, unlocked, runCoins, bonusCoins };
+}
+
+/* ===== src/ads.js ===== */
+// 激励广告点位接口（ADR-026 爽局 / ADR-032 全量广告位）
+// 红线：广告收益永远独立记账——不进评级、不进最佳纪录（爽局/广告扩容的局打助力标，见 save.recordResult）
+// 虎扑容器桥（与《乱世拼将》同款 vatask，实测口径）：
+//   window.ColorboxAI.vatask.completeRewardVideo() → {code:200, data:{rewarded}}
+//   window.ColorboxAI.vatask.getActivityTaskState() → {code:200, data:{tasks:[{taskCode:'reward', status:'completed'}]}}
+// 容器可能在广告期间重载页面：拉起前先落 PENDING 标记（含点位与上下文），重载后凭平台任务状态核对补发（30 分钟内有效）。
+const PENDING_KEY = 'dajin_pending_ad_cheat';
+
+function vataskReady() {
+  return typeof window !== 'undefined' && !!(window.ColorboxAI && window.ColorboxAI.vatask && typeof window.ColorboxAI.vatask.completeRewardVideo === 'function');
+}
+
+// 统一激励观看：kind ∈ boost 爽局 / rescue 塌架救援 / coin 结算仓币加成 / expand 满仓扩容 / supply 每日补给
+// 容器内走真激励视频；无容器环境（Pages/本地）为占位模拟（simulated:true，UI 明示）。
+async function watchReward(kind, context = {}) {
+  if (!vataskReady()) return { granted: true, simulated: true };
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify({ type: kind, ts: Date.now(), ...context })); } catch { /* 标记失败不阻塞拉起 */ }
+  try {
+    const res = await window.ColorboxAI.vatask.completeRewardVideo();
+    const ok = !!(res && res.code === 200 && res.data && res.data.rewarded);
+    try { localStorage.removeItem(PENDING_KEY); } catch { /* ignore */ }
+    return ok ? { granted: true, simulated: false } : { granted: false, simulated: false, message: (res && res.message) || '未获得奖励' };
+  } catch {
+    try { localStorage.removeItem(PENDING_KEY); } catch { /* ignore */ }
+    return { granted: false, simulated: false, message: '广告拉起失败，请重试' };
+  }
+}
+
+const Ads = {
+  // 爽局升级（ADR-026）：本趟出击（本局＋连锁后续仓）出货率升 A 配置；每趟限 1 次
+  boostRun() { return watchReward('boost'); },
+  // 其余点位（ADR-032）统一入口
+  watch(kind, context) { return watchReward(kind, context); },
+  // 开机恢复：广告期间页面被容器重载时，凭 PENDING 标记 + 平台任务状态核对；
+  // 核实完成返回标记对象 {type, ts, runId?, amount?}（发放口径在 main 按点位处理），否则 null
+  async recoverPending() {
+    let raw = null;
+    try { raw = localStorage.getItem(PENDING_KEY); if (raw) localStorage.removeItem(PENDING_KEY); } catch { /* ignore */ }
+    if (!raw || !vataskReady() || typeof window.ColorboxAI.vatask.getActivityTaskState !== 'function') return null;
+    try {
+      const j = JSON.parse(raw);
+      if (!j || !j.type || Date.now() - (j.ts || 0) > 30 * 60 * 1000) return null;
+      const st = await window.ColorboxAI.vatask.getActivityTaskState();
+      if (st && st.code === 200 && st.data) {
+        const task = (st.data.tasks || []).find(x => x.taskCode === 'reward');
+        if (task && task.status === 'completed') return j;
+      }
+    } catch { /* 核对失败不发 */ }
+    return null;
+  },
+};
+
+/* ===== src/ui/sharecard.js ===== */
+// 分享卡：Canvas 动态组件（720×960），统一模板 + 本局真实数据成图，禁止静态图充数
+// drawShareCard 返回本次绘制的数据清单 manifest，供自动化测试断言（TECH_SPEC 视觉验收）
+
+const TIER_COLORS = ['#cfd2c9', '#58b368', '#4f9dde', '#a06cd5', '#f5b921', '#ef3e4a', '#7ee7ff'];
+
+function fmtWan(v) {
+  if (v >= 100) return String(Math.round(v));
+  return (Math.round(v * 10) / 10).toString();
+}
+
+function drawShareCard(canvas, result, opts = {}) {
+  canvas.width = 720; canvas.height = 960;
+  const ctx = canvas.getContext('2d');
+  const caught = result.outcome === 'caught';
+  const mainValue = caught ? result.I : result.C;
+  const texts = [];
+
+  // 底：墨绿金属 + 斜纹边框
+  ctx.fillStyle = '#10130e'; ctx.fillRect(0, 0, 720, 960);
+  ctx.fillStyle = '#1b2016'; ctx.fillRect(24, 24, 672, 912);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(24, 24, 672, 14); ctx.clip();
+  for (let x = -40; x < 740; x += 36) {
+    ctx.fillStyle = (x / 36) % 2 ? '#f2b705' : '#10130e';
+    ctx.beginPath();
+    ctx.moveTo(x, 38); ctx.lineTo(x + 18, 24); ctx.lineTo(x + 36, 24); ctx.lineTo(x + 18, 38);
+    ctx.fill();
+  }
+  ctx.restore();
+  ctx.strokeStyle = '#3a4430'; ctx.lineWidth = 3; ctx.strokeRect(24, 24, 672, 912);
+
+  const put = (t, x, y, font, color, align = 'left') => {
+    ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align;
+    ctx.fillText(t, x, y); texts.push(t);
+  };
+
+  put('大 金 撤 离', 360, 108, 'bold 54px sans-serif', '#e8e6da', 'center');
+  put('再贪一格 · 战绩单', 360, 152, '24px sans-serif', '#9aa48c', 'center');
+  put(`${result.warehouse.name} · ${result.config.label}`, 360, 196, '26px sans-serif', '#e8e6da', 'center');
+  if (opts.nickname) put(`@${opts.nickname}`, 360, 234, '22px sans-serif', '#9aa48c', 'center');
+
+  if (caught) {
+    put('货 架 塌 了', 360, 300, 'bold 64px sans-serif', '#e5484d', 'center');
+    put('贪到最后，只保住防震箱里这一件', 360, 348, '26px sans-serif', '#9aa48c', 'center');
+    put('防震保留', 360, 440, '28px sans-serif', '#9aa48c', 'center');
+  } else {
+    put(result.outcome === 'cleared' ? '整 仓 搬 空' : '成 功 撤 离', 360, 300, 'bold 60px sans-serif', '#7fb069', 'center');
+    put('本局带出价值', 360, 348, '26px sans-serif', '#9aa48c', 'center');
+  }
+  put(`${fmtWan(mainValue)} 万`, 360, 540, 'bold 110px sans-serif', caught ? '#e5484d' : '#f5b921', 'center');
+
+  // 评级印章（仅带出局）
+  if (!caught && result.rating) {
+    ctx.save();
+    ctx.translate(588, 268); ctx.rotate(0.22);
+    ctx.strokeStyle = '#e5484d'; ctx.lineWidth = 5;
+    ctx.strokeRect(-58, -58, 116, 116);
+    ctx.font = 'bold 84px sans-serif'; ctx.fillStyle = '#e5484d'; ctx.textAlign = 'center';
+    ctx.fillText(result.rating, 0, 30);
+    ctx.restore();
+    texts.push('评级' + result.rating);
+  }
+
+  // 最贵单品
+  const top = caught ? result.insuredItem : result.topItem;
+  let y = 640;
+  if (top) {
+    put('最贵单品', 80, y, '24px sans-serif', '#9aa48c');
+    put(`${top.icon} ${top.name}（${TIER_NAMES[top.tier]}）`, 80, y + 46, 'bold 34px sans-serif', TIER_COLORS[top.tier]);
+    put(`${fmtWan(top.value)} 万`, 640, y + 46, 'bold 34px sans-serif', '#e8e6da', 'right');
+    y += 110;
+  }
+  put(`开格 ${result.opens} 次 · 震动 ${result.alert}`, 80, y, '24px sans-serif', '#9aa48c');
+  put(`搜获总值 ${fmtWan(result.G)} 万`, 640, y, '24px sans-serif', '#9aa48c', 'right');
+  y += 52;
+  put(new Date().toLocaleDateString('zh-CN'), 80, y, '22px sans-serif', '#9aa48c');
+  put(`种子 ${result.seed}`, 640, y, '22px sans-serif', '#9aa48c', 'right');
+
+  put(caught ? '塌成这样，也是一种战绩' : '见好就收，还是再贪一格？', 360, 886, '26px sans-serif', '#e8e6da', 'center');
+
+  return { width: 720, height: 960, texts, mainValue, outcome: result.outcome };
+}
+
+/* ===== src/ui/sound.js ===== */
+// 合成音效（WebAudio，零音频资源）：开格/出货/提示音/塌架/带出
+// 所有声音都由用户点击触发调用，符合浏览器自动播放策略；soundOn 存档控制
+let ctx = null;
+let enabled = true;
+
+function setSoundEnabled(v) { enabled = !!v; }
+function soundEnabled() { return enabled; }
+
+function ac() {
+  if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; } }
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+function tone(freq, dur, { type = 'square', gain = 0.06, at = 0, slideTo = null } = {}) {
+  if (!enabled) return;
+  const c = ac(); if (!c) return;
+  const t0 = c.currentTime + at;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+  g.gain.setValueAtTime(gain, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(c.destination);
+  o.start(t0); o.stop(t0 + dur + 0.02);
+}
+
+const Sfx = {
+  click() { tone(640, 0.05, { gain: 0.04 }); },
+  searching() { tone(220, 0.09, { type: 'triangle', gain: 0.03 }); tone(190, 0.09, { type: 'triangle', gain: 0.03, at: 0.12 }); },
+  reveal(tier) {
+    const base = 320 + tier * 70;
+    tone(base, 0.09, { gain: 0.05 });
+    tone(base * 1.5, 0.14, { gain: 0.06, at: 0.08 });
+    if (tier >= 4) { tone(base * 2, 0.22, { gain: 0.07, at: 0.18 }); tone(base * 2.5, 0.3, { gain: 0.06, at: 0.3 }); }
+  },
+  scare() { tone(170, 0.28, { type: 'sawtooth', gain: 0.05, slideTo: 85 }); },
+  discard() { tone(130, 0.12, { type: 'triangle', gain: 0.07, slideTo: 70 }); },
+  caught() { for (let i = 0; i < 3; i++) { tone(520, 0.16, { type: 'sawtooth', gain: 0.06, at: i * 0.34 }); tone(392, 0.16, { type: 'sawtooth', gain: 0.06, at: i * 0.34 + 0.17 }); } },
+  evac() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.13, { gain: 0.05, at: i * 0.09 })); },
+};
+
+/* ===== src/main.js ===== */
+// UI 层：四屏切换、HUD、揭示动画、满仓处置、双结算、分享卡
+// 规则与数值全部来自 sim 层与 config，本文件不写任何概率/判定。
+
+const params = new URLSearchParams(location.search);
+const FAST = params.get('fast') === '1';
+const SEED_PARAM = params.get('seed') ? Number(params.get('seed')) : null;
+const REVEAL_MS = [550, 700, 900, 1200, 1600, 2100]; // 揭示节奏放慢（ADR-020）：每格开出要有分量
+const $ = id => document.getElementById(id);
+
+let save = loadSave();
+let currentConfig = 'B'; // ADR-026：B 为唯一基准模式；A 仅作广告爽局的内部概率表，不再手动可选
+let run = null;
+let busy = false;
+let discardSel = new Set();
+let recorded = false;
+let lastCoins = { run: 0, bonus: 0 };
+let lastResultRef = null; // 当前结算页对应的 result（广告救援/加成操作它）
+let lastHistEntry = null; // 本局刚写入的战绩条目（救援后同步其 value）
+let chainNextLeg = 1;   // M3 连锁：下一局的仓序（会话内有效，刷新即断链）
+let shopCtx = null;     // M3 局前商店上下文
+let boostChain = false; // 广告爽局（ADR-026）：本趟出击是否已激活爽局（连锁整趟有效，塌架/新出击重置）
+let boostCredit = false; // 广告期间页面被容器重载、开机核对补发的爽局额度（供下趟出击，消费一次）
+// ---------- 局内检查点：容器重载/杀进程后可恢复未结束的局（《乱世拼将》两版教训：容器真会重载页面） ----------
+const RUN_CKPT_KEY = 'dajin_run_ckpt_cheat';
+function saveRunCheckpoint() {
+  if (!run) return;
+  if (run.phase === 'over') { clearRunCheckpoint(); return; }
+  const ck = {
+    v: 1, ts: Date.now(), boostChain,
+    ctor: {
+      configId: run.config.id, warehouseId: run.warehouse.id, seed: run.seed,
+      extraCells: run.baseExtraCells ?? 0, // 局内广告扩容不进构造参数，靠动作日志回放（ADR-032）
+      dualInsurance: run.insuranceCount >= 2,
+      smokeBombs: run.smoke + run.actionLog.filter(a => a[0] === 'smoke').length,
+      chainLeg: run.chainLeg, runId: run.runId, boosted: run.boosted,
+    },
+    actions: run.actionLog,
+  };
+  try { localStorage.setItem(RUN_CKPT_KEY, JSON.stringify(ck)); } catch { /* 存不下就放弃恢复能力，不阻塞游戏 */ }
+}
+function clearRunCheckpoint() { try { localStorage.removeItem(RUN_CKPT_KEY); } catch { /* ignore */ } }
+function readRunCheckpoint() {
+  try {
+    const ck = JSON.parse(localStorage.getItem(RUN_CKPT_KEY));
+    if (ck && ck.v === 1 && Date.now() - ck.ts < 24 * 3600 * 1000 && Array.isArray(ck.actions)) return ck;
+  } catch { /* 损坏检查点按无处理 */ }
+  return null;
+}
+
+function show(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(screenId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+const delay = ms => FAST ? Promise.resolve() : new Promise(r => setTimeout(r, ms));
+
+// DOM 构建助手（平台过检口径：动态内容一律 createElement + textContent，不走 HTML 字符串解析）
+function mk(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function ledgerRow(label, val, cls) { const r = mk('div', cls || 'row'); r.append(mk('span', null, label), mk('b', null, val)); return r; }
+
+// ---------- 首页 ----------
+function renderHome() {
+  $('btn-continue').classList.toggle('hidden', !readRunCheckpoint());
+  $('rec-best').textContent = `${fmtWan(save.bestCarried)} 万`;
+  $('rec-total').textContent = `${fmtWan(save.totalCarried)} 万`;
+  $('rec-ins').textContent = `${fmtWan(save.totalInsurance)} 万`;
+  $('rec-runs').textContent = `带出 ${save.evacs} · 塌架 ${save.caughts} · 共 ${save.runs} 局`;
+  $('nav-coll-count').textContent = `(${Object.keys(save.collection).length}/${ITEMS.length})`;
+  $('nav-ach-count').textContent = `(${save.achievements.length}/${ACHIEVEMENTS.length})`;
+  const v = save.vouchers ?? {};
+  const vtxt = ((v.secret ?? 0) + (v.topsecret ?? 0)) > 0 ? ` · 🎟 体验券 精品×${v.secret ?? 0} / 珍品×${v.topsecret ?? 0}` : '';
+  $('econ-line').replaceChildren(document.createTextNode('🪙 仓币 '), mk('b', null, String(save.coins ?? 0)), document.createTextNode(vtxt));
+  const supBtn = $('btn-supply');
+  if (save.lastSupplyDay === todayStr()) { supBtn.textContent = '📺 今日补给已领 ✓'; supBtn.disabled = true; }
+  else { supBtn.textContent = `📺 每日补给 · 看广告 +${ECONOMY.ads.supplyCoins} 🪙`; supBtn.disabled = false; }
+  document.querySelectorAll('#config-seg .seg-btn').forEach(b => b.classList.toggle('on', b.dataset.cfg === currentConfig));
+}
+document.querySelectorAll('#config-seg .seg-btn').forEach(b =>
+  b.addEventListener('click', () => { currentConfig = b.dataset.cfg; save.configName = currentConfig; // ---------- 音效开关 ----------
+function applySoundUI() {
+  setSoundEnabled(save.soundOn);
+  $('btn-sound-home').textContent = save.soundOn ? '🔊 音效：开' : '🔇 音效：关';
+  $('btn-sound-run').textContent = save.soundOn ? '🔊' : '🔇';
+}
+function toggleSound() { save.soundOn = !save.soundOn; storeSave(save); applySoundUI(); if (save.soundOn) Sfx.click(); }
+$('btn-sound-home').addEventListener('click', toggleSound);
+$('btn-sound-run').addEventListener('click', toggleSound);
+applySoundUI();
+applySafeTop();
+
+renderHome();
+let playerNick = null; // 虎扑昵称（容器内拉取，海报与发帖用；取不到为 null）
+// 平台恢复（虎扑容器内，异步不阻塞首屏）：
+// 1) 广告期间页面被重载 → 凭平台任务状态补发爽局；2) 本地空存档 → 从云存档恢复进度
+handleAdRecovery();
+fetchNickname().then(n => { if (n) playerNick = n; }).catch(() => {});
+restoreCloudSaveIfLocalEmpty(save).then(restored => {
+  if (restored) { save = Object.assign(loadSave(), restored); storeSave(save); applySoundUI(); renderHome(); } // 云档压在默认档上合并，缺字段不炸
+}).catch(() => {});
+// 添加到桌面：仅容器内显示（用户点击才触发）
+if (desktopAvailable()) {
+  const dBtn = $('btn-desktop');
+  dBtn.classList.remove('hidden');
+  dBtn.addEventListener('click', async () => {
+    const r = await addToDesktop();
+    if (r.message) { dBtn.textContent = r.message; setTimeout(() => { dBtn.textContent = '📲 添加到桌面'; }, 2400); }
+  });
+} }));
+$('btn-start').addEventListener('click', () => { renderWarehouses(); show('screen-warehouse'); });
+$('btn-continue').addEventListener('click', () => {
+  const ck = readRunCheckpoint();
+  if (!ck) { renderHome(); return; }
+  try {
+    const warehouse = WAREHOUSES.find(w => w.id === ck.ctor.warehouseId);
+    const restored = restoreRun({ config: CONFIGS[ck.ctor.configId], warehouse, seed: ck.ctor.seed, extraCells: ck.ctor.extraCells, dualInsurance: ck.ctor.dualInsurance, smokeBombs: ck.ctor.smokeBombs, chainLeg: ck.ctor.chainLeg, runId: ck.ctor.runId, boosted: ck.ctor.boosted }, ck.actions);
+    if (restored.phase === 'over') { clearRunCheckpoint(); renderHome(); return; } // 该局其实已结算，检查点过期
+    run = restored;
+    boostChain = !!ck.boostChain;
+    chainNextLeg = 1;
+    setupRunScreen(warehouse);
+    $('run-meta').textContent += ' · 已恢复';
+    setEvent('已恢复中断的局，进度分毫不差。继续搜，或者见好就收。', false);
+    if (run.phase === 'pending') openPending();
+  } catch { clearRunCheckpoint(); renderHome(); }
+});
+$('btn-wh-back').addEventListener('click', () => { // ---------- 音效开关 ----------
+function applySoundUI() {
+  setSoundEnabled(save.soundOn);
+  $('btn-sound-home').textContent = save.soundOn ? '🔊 音效：开' : '🔇 音效：关';
+  $('btn-sound-run').textContent = save.soundOn ? '🔊' : '🔇';
+}
+function toggleSound() { save.soundOn = !save.soundOn; storeSave(save); applySoundUI(); if (save.soundOn) Sfx.click(); }
+$('btn-sound-home').addEventListener('click', toggleSound);
+$('btn-sound-run').addEventListener('click', toggleSound);
+applySoundUI();
+applySafeTop();
+
+renderHome();
+let playerNick = null; // 虎扑昵称（容器内拉取，海报与发帖用；取不到为 null）
+// 平台恢复（虎扑容器内，异步不阻塞首屏）：
+// 1) 广告期间页面被重载 → 凭平台任务状态补发爽局；2) 本地空存档 → 从云存档恢复进度
+handleAdRecovery();
+fetchNickname().then(n => { if (n) playerNick = n; }).catch(() => {});
+restoreCloudSaveIfLocalEmpty(save).then(restored => {
+  if (restored) { save = Object.assign(loadSave(), restored); storeSave(save); applySoundUI(); renderHome(); } // 云档压在默认档上合并，缺字段不炸
+}).catch(() => {});
+// 添加到桌面：仅容器内显示（用户点击才触发）
+if (desktopAvailable()) {
+  const dBtn = $('btn-desktop');
+  dBtn.classList.remove('hidden');
+  dBtn.addEventListener('click', async () => {
+    const r = await addToDesktop();
+    if (r.message) { dBtn.textContent = r.message; setTimeout(() => { dBtn.textContent = '📲 添加到桌面'; }, 2400); }
+  });
+} show('screen-home'); });
+
+// ---------- 广告点位（ADR-032） ----------
+function todayStr() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
+function creditCoins(n) { save.coins += n; save.coinsEarned += n; storeSave(save); }
+$('btn-supply').addEventListener('click', async () => {
+  if (save.lastSupplyDay === todayStr()) return;
+  const btn = $('btn-supply');
+  btn.disabled = true;
+  $('supply-note').textContent = '广告播放中…';
+  const r = await Ads.watch('supply');
+  if (r.simulated && !FAST) await delay(900);
+  if (r.granted) {
+    save.lastSupplyDay = todayStr();
+    creditCoins(ECONOMY.ads.supplyCoins);
+    renderHome();
+    $('supply-note').textContent = `补给到账 +${ECONOMY.ads.supplyCoins} 🪙${r.simulated ? '（试玩版模拟广告）' : ''}`;
+  } else {
+    btn.disabled = false;
+    $('supply-note').textContent = r.message || '广告未看完，补给未发放。';
+  }
+});
+// 广告期间页面被重载 → 开机补发（幂等：补给看日期、结算加成看 runId、其余看标记时间戳）
+function handleAdRecovery() {
+  Ads.recoverPending().then(rec => {
+    if (!rec) return;
+    if (save.lastAdClaimTs === rec.ts) return;
+    save.lastAdClaimTs = rec.ts;
+    if (rec.type === 'boost') { boostCredit = true; storeSave(save); return; }
+    if (rec.type === 'supply') {
+      if (save.lastSupplyDay !== todayStr()) { save.lastSupplyDay = todayStr(); creditCoins(ECONOMY.ads.supplyCoins); $('supply-note').textContent = `📺 广告补给已补发 +${ECONOMY.ads.supplyCoins} 🪙`; }
+      else storeSave(save);
+    } else if (rec.type === 'coin') {
+      if (rec.runId && save.lastAdCoinRunId !== rec.runId && rec.amount > 0) { save.lastAdCoinRunId = rec.runId; creditCoins(rec.amount); $('supply-note').textContent = `📺 广告仓币加成已补发 +${rec.amount} 🪙`; }
+      else storeSave(save);
+    } else { // rescue / expand：原局上下文已随重载丢失 → 折算仓币补偿
+      creditCoins(ECONOMY.ads.recoveryCompCoins);
+      $('supply-note').textContent = `📺 广告奖励已补发 +${ECONOMY.ads.recoveryCompCoins} 🪙（页面刷新过，原局奖励折算为仓币）`;
+    }
+    renderHome();
+  }).catch(() => {});
+}
+
+// ---------- 选仓 ----------
+function renderWarehouses() {
+  $('wh-hint').textContent = chainNextLeg > 1
+    ? `🔗 连锁进行中：下一仓是第 ${chainNextLeg} 仓（仓币倍率 ×${chainMultAt(chainNextLeg)}，每格震动 +${chainNextLeg - 1}）· 🪙 仓币 ${save.coins}`
+    : `🪙 仓币 ${save.coins} · 带出按本局承担的风险折算仓币；高仓收门票，有体验券先用券`;
+  const whList = $('warehouse-list');
+  whList.replaceChildren();
+  WAREHOUSES.forEach((w, i) => {
+    const fee = entryFeeOf(w.id);
+    const hasVoucher = (save.vouchers[w.id] ?? 0) > 0;
+    const poor = fee > 0 && !hasVoucher && save.coins < fee;
+    const feeTxt = fee <= 0 ? '入场免费' : hasVoucher ? `入场费 ${fee} 🪙（有体验券 🎟）` : `入场费 ${fee} 🪙`;
+    const btn = mk('button', `wh-card${poor ? ' poor' : ''}`);
+    btn.dataset.wh = i;
+    btn.append(mk('span', 'wh-name', w.name), mk('span', 'wh-tag', w.tag),
+      mk('span', 'wh-fee', `${feeTxt}${poor ? ' · 仓币不足' : ''}`));
+    const meta = mk('div', 'wh-meta');
+    meta.append(document.createTextNode('震动 '), mk('b', null, `+${w.alertMin}~${w.alertMax}`),
+      document.createTextNode('/格 · 高品质倍率 '), mk('b', null, `×${w.weightMult}`),
+      document.createElement('br'), document.createTextNode(w.hint));
+    btn.append(meta);
+    whList.append(btn);
+  });
+  document.querySelectorAll('.wh-card').forEach(c =>
+    c.addEventListener('click', () => openShop(WAREHOUSES[Number(c.dataset.wh)])));
+}
+
+// ---------- M3 局前商店 ----------
+function shopFeeMethod(warehouse) {
+  const fee = entryFeeOf(warehouse.id);
+  if (fee <= 0) return { fee, method: 'free', cost: 0 };
+  if ((save.vouchers[warehouse.id] ?? 0) > 0) return { fee, method: 'voucher', cost: 0 };
+  return { fee, method: 'coins', cost: fee };
+}
+function shopSelectedCost() { let t = 0; for (const k of shopCtx?.items ?? []) t += ECONOMY.shop[k].price; return t; }
+function openShop(warehouse) {
+  shopCtx = { warehouse, items: new Set() };
+  $('shop-modal').classList.remove('hidden');
+  renderShop();
+}
+function boostActiveHere() { return !!(shopCtx?.boostWatched || boostCredit || (chainNextLeg > 1 && boostChain)); }
+function renderShop() {
+  const { warehouse } = shopCtx;
+  const fm = shopFeeMethod(warehouse);
+  const boostOn = boostActiveHere();
+  $('shop-title').textContent = `${warehouse.name} · 出发前准备`;
+  const feeTxt = fm.method === 'free' ? '入场免费' : fm.method === 'voucher' ? `入场费 ${fm.fee} 🪙 · 体验券抵扣 🎟` : `入场费 ${fm.fee} 🪙`;
+  const shopBody = $('shop-body');
+  shopBody.replaceChildren();
+  shopBody.append(mk('div', 'shop-fee', `${feeTxt} · 余额 ${save.coins} 🪙`));
+  if (chainNextLeg > 1) shopBody.append(mk('div', 'shop-fee', `🔗 连锁第 ${chainNextLeg} 仓：仓币倍率 ×${chainMultAt(chainNextLeg)} · 每格震动 +${chainNextLeg - 1}`));
+  {
+    const wrap = mk('span');
+    if (boostOn) {
+      wrap.append(mk('span', 'sr-name', '📺 爽局生效中'), mk('span', 'sr-desc', '本趟出击出货率已升级（出红概率翻倍），连锁不断就一直有效'));
+      const d = mk('div', 'shop-row sel boost');
+      d.append(wrap, mk('b', null, '✓'));
+      shopBody.append(d);
+    } else {
+      wrap.append(mk('span', 'sr-name', '📺 看广告 · 本趟升级爽局'), mk('span', 'sr-desc', '出货率大涨（出红概率 1.5%→3%），连锁整趟有效；最佳纪录不认爽局'));
+      const b = mk('button', 'shop-row boost');
+      b.dataset.boost = '1';
+      b.append(wrap, mk('b', null, '免费'));
+      shopBody.append(b);
+    }
+  }
+  for (const [key, it] of Object.entries(ECONOMY.shop)) {
+    const sel = shopCtx.items.has(key);
+    const wrap = mk('span');
+    wrap.append(mk('span', 'sr-name', `${sel ? '☑' : '☐'} ${it.name}`), mk('span', 'sr-desc', it.desc));
+    const b = mk('button', `shop-row${sel ? ' sel' : ''}`);
+    b.dataset.item = key;
+    b.append(wrap, mk('b', null, `${it.price} 🪙`));
+    shopBody.append(b);
+  }
+  shopBody.append(mk('div', 'shop-total', `合计 ${shopSelectedCost() + fm.cost} 🪙`));
+  const boostBtn = document.querySelector('[data-boost]');
+  if (boostBtn) boostBtn.addEventListener('click', async () => {
+    boostBtn.disabled = true;
+    $('shop-note').textContent = '广告播放中…';
+    const r = await Ads.boostRun();
+    if (r.simulated && !FAST) await delay(900); // 仅模拟广告补一个播放停顿；真广告自带时长
+    if (r.granted) { shopCtx.boostWatched = true; renderShop(); $('shop-note').textContent = r.simulated ? '爽局已激活：本趟出击出货率升级！（试玩版模拟广告）' : '爽局已激活：本趟出击出货率升级！'; }
+    else { boostBtn.disabled = false; $('shop-note').textContent = r.message || '广告未看完，爽局未生效。'; }
+  });
+  document.querySelectorAll('.shop-row').forEach(r => r.addEventListener('click', () => {
+    const key = r.dataset.item;
+    shopCtx.items.has(key) ? shopCtx.items.delete(key) : shopCtx.items.add(key);
+    renderShop();
+  }));
+  const total = shopSelectedCost() + fm.cost;
+  $('btn-shop-go').disabled = total > save.coins;
+  $('shop-note').textContent = total > save.coins
+    ? '仓币不足：去掉一件道具，或先回普通仓攒币。'
+    : '入场费与道具开局后不退（塌架也不退）。仓币靠带出折算：扛的风险越大，倍率越高。';
+}
+$('btn-shop-cancel').addEventListener('click', () => { $('shop-modal').classList.add('hidden'); shopCtx = null; });
+$('btn-shop-go').addEventListener('click', () => {
+  if (!shopCtx) return;
+  const { warehouse, items } = shopCtx;
+  const method = payEntry(save, warehouse.id); // Run 创建提交点：此刻才扣费/扣券
+  if (!method) { $('shop-note').textContent = '仓币不足，付不起入场费。'; return; }
+  const bought = [];
+  for (const key of items) {
+    if (!buyShopItem(save, key)) { // 预检已挡，防御性回滚
+      for (const b of bought) refundShopItem(save, b);
+      refundEntry(save, warehouse.id, method);
+      $('shop-note').textContent = '仓币不足，购买失败，已回滚。';
+      return;
+    }
+    bought.push(key);
+  }
+  const boostNow = boostActiveHere();
+  $('shop-modal').classList.add('hidden');
+  shopCtx = null;
+  renderHome();
+  startRun(warehouse, {
+    extraCells: items.has('expand') ? ECONOMY.shop.expand.cells : 0,
+    dualInsurance: items.has('dualins'),
+    smokeBombs: items.has('smoke') ? 1 : 0,
+    boostNow,
+  });
+});
+
+// ---------- 开局与局内渲染 ----------
+function startRun(warehouse, opts = {}) {
+  const { boostNow = false, ...runOpts } = opts;
+  const seed = SEED_PARAM ?? Math.floor(Math.random() * 90000000) + 10000000;
+  const leg = chainNextLeg; chainNextLeg = 1;
+  if (leg === 1) { boostChain = boostNow || boostCredit; boostCredit = false; } // 新出击：商店激活或重载补发额度
+  else if (boostNow) boostChain = true;              // 连锁中途补看广告，整趟生效
+  const boosted = boostChain;
+  run = new Run({ config: boosted ? CONFIGS.A : CONFIGS.B, warehouse, seed, chainLeg: leg, boosted, ...runOpts });
+  setupRunScreen(warehouse);
+  setEvent('点任意一格开始搜。越往深处，好货越多。', false);
+}
+function bagTitleText() { return run && run.bagCapacity > 20 ? `背包（5×4 + 扩容${run.bagCapacity - 20}）` : '背包（5×4）'; }
+// 局内界面初始化（新局与重载恢复共用）：重置局内会话态、重建格子并渲染
+function setupRunScreen(warehouse) {
+  recorded = false;
+  lastCoins = { run: 0, bonus: 0 };
+  discardSel = new Set();
+  $('run-seed').textContent = run.seed;
+  $('run-meta').textContent = `${warehouse.name} · ${run.boosted ? '📺 爽局（出货率↑）' : 'B 稀有'}${run.chainLeg > 1 ? ` · 🔗 连锁第 ${run.chainLeg} 仓` : ''}`;
+  $('bag-title').textContent = bagTitleText();
+  {
+    const cellsEl = $('cells');
+    cellsEl.replaceChildren();
+    for (let i = 0; i < SHARED.cellsPerWarehouse; i++) {
+      const b = mk('button', 'cell unopened', '📦');
+      b.dataset.cell = i;
+      b.append(mk('small', null, `${i + 1} 号格`));
+      cellsEl.append(b);
+    }
+  }
+  document.querySelectorAll('.cell').forEach(c => c.addEventListener('click', () => onCell(Number(c.dataset.cell))));
+  for (let i = 0; i < SHARED.cellsPerWarehouse; i++) { // 恢复时重绘已开格（新局无已开格，天然跳过）
+    if (run.cellsOpened[i] && run.cellItems[i]) renderCellOpened(i, run.cellItems[i]);
+  }
+  $('pending-modal').classList.add('hidden');
+  // 震动条刻度：风险线 = 从该震动起，最大增量可达坡道起点（ADR-021/022）；必塌线在条外（>=115），隐藏
+  $('tick-gamble').style.left = `${SHARED.catchRamp[0][0] - warehouse.alertMax}%`;
+  $('tick-certain').style.display = 'none';
+  renderRun(0);
+  show('screen-run');
+}
+
+function setEvent(text, bad) {
+  const el = $('event-line');
+  el.textContent = text;
+  el.classList.toggle('bad', !!bad);
+}
+
+let displayedValue = 0;
+function renderRun(prevValue) {
+  saveRunCheckpoint(); // 局内每次渲染落检查点（phase=over 时自动清除）
+  // 估值跳字
+  const target = Math.round(run.bagValue() * 10) / 10;
+  if (FAST || prevValue === target) { displayedValue = target; $('hud-value').textContent = `${fmtWan(target)} 万`; }
+  else {
+    const from = prevValue, t0 = performance.now();
+    const step = t => {
+      const p = Math.min(1, (t - t0) / 300);
+      displayedValue = from + (target - from) * p;
+      $('hud-value').textContent = `${fmtWan(displayedValue)} 万`;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  $('hud-count').textContent = `${run.bag.length} 件`;
+  $('hud-opens').textContent = `${run.opens}/16`;
+  $('hud-depth').textContent = depthNameAt(run.opens);
+  // 震动
+  const a = run.alert;
+  $('alert-num').textContent = `震动 ${a}`;
+  const prob01 = run.nextCaughtProb();
+  const band = riskBand(prob01);
+  $('alert-next').textContent = `下一格风险：${band}`;
+  // 阶段按本仓真实概率分档（ADR-020 改风险档显示：不给精确百分比，留不确定性才有悬念感）
+  const stage = prob01 >= 1 ? '必塌区' : prob01 > 0 ? `${band}区` : a >= 70 ? '剧晃' : a >= 40 ? '晃动' : '平稳';
+  $('alert-stage').textContent = stage;
+  const fill = $('alert-fill');
+  fill.style.width = `${Math.min(100, a)}%`;
+  fill.style.background = (a >= 100 || prob01 >= 1) ? 'var(--danger)' : prob01 > 0.5 ? '#e5484d' : prob01 > 0 ? '#e07b39' : a >= 70 ? 'var(--hazard)' : a >= 40 ? 'var(--khaki)' : 'var(--olive)';
+  $('alert-warn').textContent =
+    prob01 >= 1 ? '⚠ 必塌区：现在开格必定塌架，先打包带走！' :
+    prob01 > 0.5 ? `已进入${band}区：下一格大概率塌架，见好就收！` :
+    prob01 > 0 ? `已进入${band}区：再开一格有塌架的风险。` : '';
+  // 危险氛围：进入风险区后屏幕边缘泛红并呼吸
+  const vg = $('vignette');
+  if (prob01 > 0) {
+    const vop = prob01 >= 1 ? 0.9 : prob01 > 0.5 ? 0.6 : 0.32;
+    vg.style.setProperty('--vop', vop);
+    vg.style.opacity = vop;
+    vg.classList.toggle('pulse', prob01 < 1);
+    if (prob01 >= 1) vg.classList.remove('pulse');
+  } else { vg.style.opacity = 0; vg.classList.remove('pulse'); }
+  // 背包
+  const bag = $('bag');
+  bag.innerHTML = '';
+  for (const it of run.bag) {
+    const xs = it.cells.map(c => c[0]), ys = it.cells.map(c => c[1]);
+    const d = document.createElement('div');
+    d.className = `bag-item t${it.tier}`;
+    d.style.left = `${Math.min(...xs) / 5 * 100}%`;
+    d.style.top = `${Math.min(...ys) / run.bagRows * 100}%`;
+    d.style.width = `${(Math.max(...xs) - Math.min(...xs) + 1) / 5 * 100}%`;
+    d.style.height = `${(Math.max(...ys) - Math.min(...ys) + 1) / run.bagRows * 100}%`;
+    d.textContent = it.icon;
+    if (run.insuredUids.includes(it.uid)) d.append(mk('span', 'lock', '🔒'));
+    d.title = `${it.name} · ${fmtWan(it.value)} 万`;
+    bag.appendChild(d);
+  }
+  const used = run.bag.reduce((s, i) => s + i.size, 0);
+  $('bag-cells-info').textContent = `${used}/${run.bagCapacity} 格`;
+  const sb = $('btn-smoke');
+  if (run.smoke > 0 && run.phase !== 'over') { sb.classList.remove('hidden'); sb.textContent = `💨 减震垫 · 震动 −15（剩 ${run.smoke}）`; }
+  else sb.classList.add('hidden');
+  const bonusHint = a < SHARED.earlyEvacBonusBelowAlert && run.bagValue() > 0 ? '（含早撤加成）' : '';
+  $('btn-evac').textContent = `带出 · 带走 ${fmtWan(run.bagValue())} 万${bonusHint}`;
+}
+
+function renderCellOpened(idx, item) {
+  const c = document.querySelector(`.cell[data-cell="${idx}"]`);
+  if (!c) return;
+  c.className = `cell opened revealing t${item.tier}`;
+  c.textContent = item.icon;
+  c.append(mk('span', 'cv', `${fmtWan(item.value)} 万`));
+}
+
+async function onCell(idx) {
+  if (busy || !run || run.phase !== 'playing' || run.cellsOpened[idx]) return;
+  busy = true;
+  Sfx.click();
+  const cellEl = document.querySelector(`.cell[data-cell="${idx}"]`);
+  const prevValue = run.bagValue();
+  const ev = run.openCell(idx);
+  if (ev.type === 'caught') {
+    if (cellEl) { cellEl.classList.add('searching'); cellEl.textContent = '🔍'; cellEl.append(mk('small', null, '翻找中')); }
+    Sfx.searching();
+    await delay(600);
+    document.body.classList.add('police');
+    Sfx.caught();
+    if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+    document.getElementById('app').classList.add('shake');
+    setEvent(`货架轰隆一声塌了——本格没来得及看。`, true);
+    renderRun(prevValue);
+    await delay(950);
+    document.body.classList.remove('police');
+    document.getElementById('app').classList.remove('shake');
+    busy = false;
+    return finishToResult(ev.result);
+  }
+  if (ev.type === 'item' || ev.type === 'full') {
+    if (cellEl) { cellEl.classList.add('searching'); cellEl.textContent = '🔍'; cellEl.append(mk('small', null, '翻找中')); }
+    Sfx.searching();
+    await delay(REVEAL_MS[ev.item.tier]);
+    if (cellEl) cellEl.classList.remove('searching');
+    renderCellOpened(idx, ev.item);
+    Sfx.reveal(ev.item.tier);
+    if (ev.item.tier >= 3) showLootPop(ev.item);
+    if (ev.item.tier >= 4 && navigator.vibrate) navigator.vibrate(ev.item.tier === 5 ? [60, 40, 90] : 45);
+    if (ev.scared) { Sfx.scare(); flashVignette(); }
+    const scareTxt = ev.scared ? ' 旁边货架咯吱一响，震动额外 +4！' : '';
+    if (ev.type === 'item') {
+      setEvent(`${ev.item.icon} ${ev.item.name}（${TIER_NAMES[ev.item.tier]}）${fmtWan(ev.item.value)} 万，已入包。震动 +${ev.inc}。${scareTxt}`, false);
+      renderRun(prevValue);
+      busy = false;
+      if (ev.cleared) { await delay(600); return finishToResult(ev.result); }
+    } else {
+      setEvent(`翻出 ${ev.item.name}，但背包塞不下了！${scareTxt}`, true);
+      renderRun(prevValue);
+      busy = false;
+      openPending();
+    }
+  }
+}
+
+// 出货展示（紫以上）：仪式感弹层，大金全屏泛光；fast 模式跳过
+let lootTimer = null;
+function showLootPop(item) {
+  if (FAST) return;
+  const pop = $('loot-pop'), inner = $('loot-pop-inner');
+  pop.className = `t${item.tier}`;
+  const lpTier = mk('div', 'lp-tier', item.tier === 6 ? '★ 瑰 宝 ★' : item.tier === 5 ? '★ 大 金 ★' : TIER_NAMES[item.tier]);
+  lpTier.style.color = TIER_COLORS[item.tier];
+  inner.replaceChildren(mk('span', 'lp-icon', item.icon), mk('div', 'lp-name', item.name), lpTier, mk('div', 'lp-value', `${fmtWan(item.value)} 万`));
+  pop.classList.remove('hidden');
+  clearTimeout(lootTimer);
+  lootTimer = setTimeout(() => pop.classList.add('hidden'), item.tier >= 5 ? 2100 : 1300);
+}
+function flashVignette() {
+  const v = $('vignette');
+  v.classList.add('flash');
+  setTimeout(() => v.classList.remove('flash'), 280);
+}
+function riskBand(p) {
+  if (p <= 0) return '安全';
+  if (p <= 0.25) return '低危';
+  if (p <= 0.5) return '中危';
+  if (p <= 0.75) return '高危';
+  if (p < 1) return '极危';
+  return '必塌';
+}
+
+// ---------- 满仓处置 ----------
+function openPending() {
+  const p = run.pending;
+  const el = $('pending-item');
+  el.style.borderColor = TIER_COLORS[p.tier];
+  el.textContent = `${p.icon} ${p.name}（${TIER_NAMES[p.tier]}）· ${fmtWan(p.value)} 万 · 占 ${p.size} 格`;
+  el.append(mk('small', null, p.desc));
+  $('pending-note').textContent = '这件放不下。丢几件腾位（每件 +5 震动），放弃这件，还是见好就收？';
+  $('btn-pend-expand').classList.toggle('hidden', !!run.adExpanded);
+  $('discard-panel').classList.add('hidden');
+  $('pending-btns').classList.remove('hidden');
+  $('pending-modal').classList.remove('hidden');
+}
+$('btn-pend-expand').addEventListener('click', async () => {
+  if (!run || run.phase !== 'pending' || run.adExpanded) return;
+  const btn = $('btn-pend-expand');
+  btn.disabled = true;
+  $('pending-note').textContent = '广告播放中…';
+  const r = await Ads.watch('expand', { runId: run.runId });
+  if (r.simulated && !FAST) await delay(900);
+  btn.disabled = false;
+  if (!r.granted) { $('pending-note').textContent = r.message || '广告未看完，扩容未生效。'; return; }
+  const res = run.expandBagAd();
+  $('bag-title').textContent = bagTitleText();
+  if (res.placed) {
+    $('pending-modal').classList.add('hidden');
+    setEvent(`📺 临时扩容 +4 格——「${run.reveals[run.reveals.length - 1]?.name ?? '宝贝'}」放下了！（本局算广告助力，最佳纪录不认）`, false);
+    renderRun(run.bagValue());
+  } else {
+    renderRun(run.bagValue());
+    $('pending-note').textContent = '已扩容 +4 格（本局有效），但这件还是放不下——丢几件腾位吧。';
+    btn.classList.add('hidden');
+  }
+});
+$('btn-pend-discard').addEventListener('click', () => {
+  discardSel = new Set();
+  $('pending-btns').classList.add('hidden');
+  $('discard-panel').classList.remove('hidden');
+  renderDiscard();
+});
+$('btn-discard-cancel').addEventListener('click', () => {
+  $('discard-panel').classList.add('hidden');
+  $('pending-btns').classList.remove('hidden');
+});
+function renderDiscard() {
+  {
+    const dl = $('discard-list');
+    dl.replaceChildren();
+    for (const i of run.bag) {
+      const ch = mk('button', `discard-chip${discardSel.has(i.uid) ? ' sel' : ''}`,
+        `${i.icon} ${i.name} · ${fmtWan(i.value)}万 · ${i.size}格${run.insuredUids.includes(i.uid) ? ' 🔒' : ''}`);
+      ch.dataset.uid = i.uid;
+      dl.append(ch);
+    }
+  }
+  document.querySelectorAll('.discard-chip').forEach(ch => ch.addEventListener('click', () => {
+    const uid = Number(ch.dataset.uid);
+    discardSel.has(uid) ? discardSel.delete(uid) : discardSel.add(uid);
+    renderDiscard();
+  }));
+  const sel = run.bag.filter(i => discardSel.has(i.uid));
+  const freed = sel.reduce((s, i) => s + i.size, 0);
+  $('discard-info').textContent = `已选 ${sel.length} 件 · 腾出 ${freed} 格 · 这件占 ${run.pending.size} 格 · 丢弃代价 震动 +${SHARED.discardAlertPerItem * sel.length}（防震件被丢，标记自动转到最贵的一件）`;
+}
+$('btn-discard-confirm').addEventListener('click', () => {
+  if (!discardSel.size) return;
+  const prevValue = run.bagValue();
+  Sfx.discard();
+  const res = run.discard([...discardSel]);
+  if (run.phase === 'playing') {
+    $('pending-modal').classList.add('hidden');
+    setEvent(`丢了 ${res.dropped} 件腾位，${run.pending === null ? '新物品已入包' : ''}。震动 +${SHARED.discardAlertPerItem * res.dropped}。`, false);
+    renderRun(prevValue);
+  } else {
+    $('pending-note').textContent = '还是放不下（形状对不上）。再选几件，或放弃这件/直接带走。';
+    discardSel = new Set();
+    renderDiscard();
+  }
+});
+$('btn-pend-abandon').addEventListener('click', () => {
+  const name = run.pending?.name;
+  run.abandonPending();
+  $('pending-modal').classList.add('hidden');
+  setEvent(`放弃了「${name}」，留在原地继续搜。`, false);
+  renderRun(run.bagValue());
+});
+$('btn-pend-evac').addEventListener('click', () => {
+  $('pending-modal').classList.add('hidden');
+  const res = run.evacuate();
+  if (res) finishToResult(res);
+});
+$('btn-evac').addEventListener('click', () => {
+  if (busy || !run || run.phase !== 'playing') return;
+  const res = run.evacuate();
+  if (res) finishToResult(res);
+});
+$('btn-smoke').addEventListener('click', () => {
+  if (busy || !run) return;
+  if (run.useSmoke()) { Sfx.click(); setEvent('🧽 减震垫铺好，货架稳住了——震动 −15（已经担过的风险不退）。', false); renderRun(run.bagValue()); }
+});
+
+// ---------- 结算 ----------
+function finishToResult(result) {
+  if (result.outcome !== 'caught') Sfx.evac();
+  let unlocked = [], newSeen = [];
+  if (!recorded) {
+    const before = new Set(Object.keys(save.collection));
+    const rr = recordResult(save, result);
+    save = rr.save; unlocked = rr.unlocked; recorded = true;
+    lastCoins = { run: rr.runCoins ?? 0, bonus: rr.bonusCoins ?? 0 };
+    lastHistEntry = save.history[0] ?? null;
+    newSeen = [...new Set((result.reveals ?? []).map(r => r.itemId))].filter(id => !before.has(id));
+  }
+  lastResultRef = result;
+  const body = $('result-body');
+  body.replaceChildren();
+  const headEl = (cls, txt) => { const hd = mk('div', `result-head ${cls}`); hd.append(mk('div', 'big', txt)); return hd; };
+  const ledgerEl = rows => { const card = mk('div', 'card ledger'); rows.forEach(r => card.append(r)); return card; };
+  if (result.outcome === 'caught') {
+    body.append(headEl('lose', '货 架 塌 了'));
+    body.append(mk('p', 'result-sub', `${result.warehouse.name} · ${result.boosted ? '📺广告爽局' : result.config.label} · 开了 ${result.opens} 格，终局震动 ${result.alert}`));
+    const rows = [
+      ledgerRow('搜获总值', `${fmtWan(result.G)} 万`),
+      ledgerRow('被压坏', `-${fmtWan(result.G - result.I)} 万`),
+      ledgerRow('防震箱保留', `${fmtWan(result.I)} 万`, 'row total'),
+      ledgerRow('仓币', '+0（塌架不发币）', 'row coin-row'),
+    ];
+    if (lastCoins.bonus > 0) rows.push(ledgerRow('成就 / 套装奖励', `+${lastCoins.bonus} 🪙`, 'row coin-row'));
+    body.append(ledgerEl(rows));
+    body.append(mk('p', 'top-item', (result.insuredItems ?? []).length
+      ? `🔒 防震箱保住了：${result.insuredItems.map(i => `${i.icon} ${i.name} ${fmtWan(i.value)} 万`).join('、')}`
+      : '背包是空的，什么都没保住。'));
+    if (result.rescued) body.append(mk('p', 'top-item', '📺 广告救援：多保住了一件（已计入防震保留）。'));
+  } else {
+    body.append(headEl('win', result.outcome === 'cleared' ? '整仓搬空' : '带出成功'));
+    body.append(mk('p', 'result-sub', `${result.warehouse.name} · ${result.boosted ? '📺广告爽局' : result.config.label} · 开了 ${result.opens} 格 · 震动 ${result.alert}`));
+    const stampWrap = mk('div');
+    stampWrap.style.textAlign = 'center';
+    stampWrap.append(mk('span', 'stamp', result.rating));
+    body.append(stampWrap);
+    const rows = [
+      ledgerRow('搜获总值 G', `${fmtWan(result.G)} 万`),
+      ledgerRow('成功带出 C', `${fmtWan(result.C)} 万`),
+    ];
+    if (result.bonus > 0) rows.push(ledgerRow('早撤加成（震动<40，+5%）', `+${fmtWan(result.bonus)} 万`));
+    rows.push(ledgerRow('最终到手', `${fmtWan(result.final)} 万`, 'row total'));
+    rows.push(ledgerRow(`仓币折算（风险 R ${result.riskR.toFixed(2)} · ×${result.coinRate}${result.chainMult > 1 ? ` · 连锁 ×${result.chainMult}` : ''}）`, `+${lastCoins.run} 🪙`, 'row coin-row'));
+    if (lastCoins.bonus > 0) rows.push(ledgerRow('成就 / 套装奖励', `+${lastCoins.bonus} 🪙`, 'row coin-row'));
+    if (result.coinBonusApplied > 0) rows.push(ledgerRow('广告加成 · 仓币 +50%', `+${result.coinBonusApplied} 🪙`, 'row coin-row'));
+    body.append(ledgerEl(rows));
+    body.append(mk('p', 'top-item', `${result.topItem ? `最贵单品：${result.topItem.icon} ${result.topItem.name}（${TIER_NAMES[result.topItem.tier]}）${fmtWan(result.topItem.value)} 万` : ''}${result.hasRed ? ' · 本局出过大金！' : ''}`));
+  }
+  if (unlocked.length || newSeen.length) {
+    const un = mk('div', 'unlock-note');
+    if (newSeen.length) un.append(document.createTextNode(`📖 新点亮图鉴 ${newSeen.length} 件`));
+    for (const a of unlocked) un.append(mk('div', null, `🏆 成就解锁：${a.name}——${a.desc}`));
+    body.append(un);
+  }
+  // M3 连锁：带出可继续下一仓（倍率递增封顶、每仓照付门票）；塌架断链，已落袋不受影响
+  const chainBtn = $('btn-chain');
+  if (result.outcome !== 'caught') {
+    chainBtn.classList.remove('hidden');
+    chainBtn.textContent = `🔗 继续下一仓（第 ${result.chainLeg + 1} 仓 · 仓币倍率 ×${chainMultAt(result.chainLeg + 1)}）`;
+    chainBtn.onclick = () => { chainNextLeg = result.chainLeg + 1; renderWarehouses(); show('screen-warehouse'); };
+  } else {
+    chainBtn.classList.add('hidden');
+    boostChain = false; // 塌架即出击结束，爽局激活随之清零
+    if (result.chainLeg >= 2) body.append(mk('p', 'top-item', `🔗 连锁在第 ${result.chainLeg} 仓中断——已落袋的仓币和战绩都还在。`));
+  }
+  clearRunCheckpoint();
+  renderHome();
+  $('btn-rescue').classList.toggle('hidden', !(result.outcome === 'caught' && !result.rescued && rescueCandidate(result)));
+  $('btn-coinbonus').classList.toggle('hidden', !(result.outcome !== 'caught' && !result.coinBonusApplied && Math.floor((lastCoins.run ?? 0) * ECONOMY.ads.coinBonusRate) > 0));
+  $('ad-note').textContent = '';
+  $('btn-post').classList.toggle('hidden', !inContainer()); // 发帖晒战绩仅虎扑容器内可用
+  $('btn-share').classList.toggle('hidden', inContainer()); // 容器内以发帖分享（平台规范路径）
+  $('post-note').textContent = '';
+  const manifest = drawShareCard($('share-canvas'), result, { nickname: playerNick });
+  window.__DAJIN_LAST_CARD__ = manifest;
+  show('screen-result');
+}
+// 广告救援候选：背包里最贵的未防震件品（ADR-032）
+function rescueCandidate(result) {
+  const ins = new Set((result.insuredItems ?? []).map(i => i.uid));
+  return (result.items ?? []).find(i => !ins.has(i.uid)) ?? null;
+}
+$('btn-rescue').addEventListener('click', async () => {
+  const result = lastResultRef;
+  const cand = result && rescueCandidate(result);
+  if (!result || !cand || result.rescued) return;
+  const btn = $('btn-rescue');
+  btn.disabled = true;
+  $('ad-note').textContent = '广告播放中…';
+  const r = await Ads.watch('rescue', { runId: result.runId });
+  if (r.simulated && !FAST) await delay(900);
+  btn.disabled = false;
+  if (!r.granted) { $('ad-note').textContent = r.message || '广告未看完，救援未生效。'; return; }
+  result.insuredItems = [...(result.insuredItems ?? []), cand].sort((a, b) => b.value - a.value);
+  result.I = Math.round(result.insuredItems.reduce((sum, i) => sum + i.value, 0) * 10) / 10;
+  result.C = result.I; result.final = result.I;
+  result.rescued = true;
+  save.totalInsurance = Math.round((save.totalInsurance + cand.value) * 10) / 10;
+  if (lastHistEntry) lastHistEntry.value = result.I;
+  storeSave(save);
+  finishToResult(result);
+  $('ad-note').textContent = `救援成功：${cand.icon} ${cand.name} 也保住了！${r.simulated ? '（试玩版模拟广告）' : ''}`;
+});
+$('btn-coinbonus').addEventListener('click', async () => {
+  const result = lastResultRef;
+  if (!result || result.coinBonusApplied) return;
+  const amount = Math.floor((lastCoins.run ?? 0) * ECONOMY.ads.coinBonusRate);
+  if (amount <= 0) return;
+  const btn = $('btn-coinbonus');
+  btn.disabled = true;
+  $('ad-note').textContent = '广告播放中…';
+  const r = await Ads.watch('coin', { runId: result.runId, amount });
+  if (r.simulated && !FAST) await delay(900);
+  btn.disabled = false;
+  if (!r.granted) { $('ad-note').textContent = r.message || '广告未看完，加成未生效。'; return; }
+  if (save.lastAdCoinRunId !== result.runId) { save.lastAdCoinRunId = result.runId; creditCoins(amount); }
+  result.coinBonusApplied = amount;
+  finishToResult(result);
+  $('ad-note').textContent = `仓币加成到账 +${amount} 🪙${r.simulated ? '（试玩版模拟广告）' : ''}`;
+});
+let posting = false;
+$('btn-post').addEventListener('click', async () => {
+  if (posting || !run) return;
+  posting = true;
+  const btn = $('btn-post');
+  btn.disabled = true;
+  $('post-note').textContent = '正在生成海报并上传…';
+  try {
+    const result = run.buildResult();
+    const blob = await new Promise(r => $('share-canvas').toBlob(r, 'image/png'));
+    if (!blob) throw new Error('海报生成失败，请重试');
+    const nick = playerNick || await fetchNickname();
+    const caught = result.outcome === 'caught';
+    const title = caught ? `大金撤离翻车了｜${result.warehouse.name}塌架，只保住 ${fmtWan(result.I)} 万` : `大金撤离｜${result.warehouse.name} ${result.rating} 级带出，带出 ${fmtWan(result.C)} 万！`;
+    const lines = [
+      nick ? `@${nick} 的战绩单` : '我的战绩单',
+      caught ? `结果：货架塌了，防震保留 ${fmtWan(result.I)} 万${result.topItem ? `（${result.topItem.name}）` : ''}，仓币 +0` : `结果：成功带出，带出 ${fmtWan(result.C)} 万，评级 ${result.rating}${result.topItem ? `，最贵 ${result.topItem.name}` : ''}，仓币 +${result.coinsGained}`,
+      result.boosted ? '本局是广告爽局（出货率拉满）' : '纯 B 正赛局',
+      result.chainLeg > 1 ? `连锁第 ${result.chainLeg} 仓` : '',
+      '逐格开箱，见好就收还是再贪一格？来《大金撤离：再贪一格》试试手气。',
+    ].filter(Boolean);
+    const r = await postResultPoster({ blob, title, content: lines.join('\n') });
+    $('post-note').textContent = r.ok ? '发帖编辑器已打开，改两句就能发啦' : r.message;
+  } catch (e) {
+    $('post-note').textContent = e?.message || '发帖失败，请重试';
+  }
+  posting = false;
+  btn.disabled = false;
+});
+$('btn-share').addEventListener('click', () => {
+  // 页面内展示战绩图（长按/右键保存）——平台规范：不做程序化保存链路
+  const img = $('share-preview');
+  img.src = $('share-canvas').toDataURL('image/png');
+  img.classList.remove('hidden');
+  $('share-hint').classList.remove('hidden');
+});
+$('btn-again').addEventListener('click', () => { renderWarehouses(); show('screen-warehouse'); openShop(run.warehouse); }); // 再来一局同样走局前商店（门票/道具口径一致）
+$('btn-result-warehouse').addEventListener('click', () => { renderWarehouses(); show('screen-warehouse'); });
+$('btn-result-home').addEventListener('click', () => { // ---------- 音效开关 ----------
+function applySoundUI() {
+  setSoundEnabled(save.soundOn);
+  $('btn-sound-home').textContent = save.soundOn ? '🔊 音效：开' : '🔇 音效：关';
+  $('btn-sound-run').textContent = save.soundOn ? '🔊' : '🔇';
+}
+function toggleSound() { save.soundOn = !save.soundOn; storeSave(save); applySoundUI(); if (save.soundOn) Sfx.click(); }
+$('btn-sound-home').addEventListener('click', toggleSound);
+$('btn-sound-run').addEventListener('click', toggleSound);
+applySoundUI();
+applySafeTop();
+
+renderHome();
+let playerNick = null; // 虎扑昵称（容器内拉取，海报与发帖用；取不到为 null）
+// 平台恢复（虎扑容器内，异步不阻塞首屏）：
+// 1) 广告期间页面被重载 → 凭平台任务状态补发爽局；2) 本地空存档 → 从云存档恢复进度
+handleAdRecovery();
+fetchNickname().then(n => { if (n) playerNick = n; }).catch(() => {});
+restoreCloudSaveIfLocalEmpty(save).then(restored => {
+  if (restored) { save = Object.assign(loadSave(), restored); storeSave(save); applySoundUI(); renderHome(); } // 云档压在默认档上合并，缺字段不炸
+}).catch(() => {});
+// 添加到桌面：仅容器内显示（用户点击才触发）
+if (desktopAvailable()) {
+  const dBtn = $('btn-desktop');
+  dBtn.classList.remove('hidden');
+  dBtn.addEventListener('click', async () => {
+    const r = await addToDesktop();
+    if (r.message) { dBtn.textContent = r.message; setTimeout(() => { dBtn.textContent = '📲 添加到桌面'; }, 2400); }
+  });
+} show('screen-home'); });
+
+// ---------- M2：图鉴 / 成就 / 战绩 ----------
+function collCellEl(item) {
+  const n = save.collection[item.id] ?? 0;
+  const lit = n > 0;
+  const d = mk('div', `coll-cell ${lit ? 'lit' : 'unlit'}`);
+  d.style.borderColor = TIER_COLORS[item.tier];
+  d.append(mk('span', 'cc-icon', lit ? item.icon : '❔'), mk('span', 'cc-name', lit ? item.name : '？？？'));
+  if (n > 1) d.append(mk('span', 'cc-count', `×${n}`));
+  return d;
+}
+function renderCollection() {
+  const lit = Object.keys(save.collection).length;
+  $('coll-summary').textContent = `已点亮 ${lit} / ${ITEMS.length} 件 · 摸到过即点亮（含塌架、丢弃的），重复摸到累计次数`;
+  const body = $('coll-body');
+  body.replaceChildren();
+  for (const st of SETS) {
+    const pr = setProgress(st.id, save.collection);
+    const members = ITEMS.filter(i => i.setId === st.id);
+    const setDiv = mk('div', `coll-set${pr.done ? ' done' : ''}`);
+    const hd = mk('div', 'coll-set-head');
+    hd.append(mk('b', null, `${st.name}${pr.done ? ' ✔ 已集齐' : ''}`), mk('span', null, `${st.desc} · ${pr.lit}/${pr.total}`));
+    const grid = mk('div', 'coll-grid');
+    members.forEach(m => grid.append(collCellEl(m)));
+    setDiv.append(hd, grid);
+    body.append(setDiv);
+  }
+  for (let t = 5; t >= 0; t--) {
+    const items = ITEMS.filter(i => i.tier === t);
+    const title = mk('div', 'coll-tier-title', `${TIER_NAMES[t]} · ${items.filter(i => (save.collection[i.id] ?? 0) > 0).length}/${items.length}`);
+    title.style.color = TIER_COLORS[t];
+    const grid = mk('div', 'coll-grid');
+    items.forEach(m => grid.append(collCellEl(m)));
+    body.append(title, grid);
+  }
+}
+function renderAchievements() {
+  $('ach-summary').textContent = `已解锁 ${save.achievements.length} / ${ACHIEVEMENTS.length}`;
+  {
+    const ab = $('ach-body');
+    ab.replaceChildren();
+    for (const a of ACHIEVEMENTS) {
+      const has = save.achievements.includes(a.id);
+      const row = mk('div', `ach-row${has ? '' : ' locked'}`);
+      const txt = mk('span');
+      txt.append(mk('div', 'ach-name', a.name), mk('div', 'ach-desc', a.desc));
+      row.append(mk('span', 'ach-icon', has ? '🏆' : '🔒'), txt);
+      ab.append(row);
+    }
+  }
+}
+function renderHistory() {
+  const hb = $('hist-body');
+  if (!save.history.length) { hb.replaceChildren(mk('p', 'screen-sub', '还没有战绩，去开第一局。')); return; }
+  const whName = id => (WAREHOUSES.find(w => w.id === id) ?? {}).name ?? id;
+  hb.replaceChildren();
+  for (const hst of save.history) {
+    const d = new Date(hst.t);
+    const when = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const label = hst.outcome === 'caught' ? '塌架' : hst.outcome === 'cleared' ? '搬空' : '带出';
+    const row = mk('div', `hist-row${hst.outcome === 'caught' ? ' caught' : ''}`);
+    const left = mk('span');
+    left.append(document.createTextNode(`${label} · ${whName(hst.warehouse)} `),
+      mk('span', 'h-meta', `${when} · 开 ${hst.opens} 格${hst.hasRed ? ' · 出大金' : ''}${hst.rating ? ` · ${hst.rating} 级` : ''}${hst.boosted ? ' · 📺爽局' : hst.assisted ? ' · 📺助力' : ''}`));
+    row.append(left, mk('span', 'h-val', `${fmtWan(hst.value)} 万`));
+    hb.append(row);
+  }
+}
+$('btn-nav-collection').addEventListener('click', () => { renderCollection(); show('screen-collection'); });
+$('btn-nav-ach').addEventListener('click', () => { renderAchievements(); show('screen-achievements'); });
+$('btn-nav-history').addEventListener('click', () => { renderHistory(); show('screen-history'); });
+document.querySelectorAll('.back-home').forEach(b => b.addEventListener('click', () => { renderHome(); show('screen-home'); }));
+
+// 测试钩子（TECH_SPEC）：返回当前局的纯数据快照
+window.__DAJIN_STATE__ = () => run ? run.snapshot() : { screen: 'home' };
+
+// ---------- 音效开关 ----------
+function applySoundUI() {
+  setSoundEnabled(save.soundOn);
+  $('btn-sound-home').textContent = save.soundOn ? '🔊 音效：开' : '🔇 音效：关';
+  $('btn-sound-run').textContent = save.soundOn ? '🔊' : '🔇';
+}
+function toggleSound() { save.soundOn = !save.soundOn; storeSave(save); applySoundUI(); if (save.soundOn) Sfx.click(); }
+$('btn-sound-home').addEventListener('click', toggleSound);
+$('btn-sound-run').addEventListener('click', toggleSound);
+applySoundUI();
+applySafeTop();
+
+renderHome();
+let playerNick = null; // 虎扑昵称（容器内拉取，海报与发帖用；取不到为 null）
+// 平台恢复（虎扑容器内，异步不阻塞首屏）：
+// 1) 广告期间页面被重载 → 凭平台任务状态补发爽局；2) 本地空存档 → 从云存档恢复进度
+handleAdRecovery();
+fetchNickname().then(n => { if (n) playerNick = n; }).catch(() => {});
+restoreCloudSaveIfLocalEmpty(save).then(restored => {
+  if (restored) { save = Object.assign(loadSave(), restored); storeSave(save); applySoundUI(); renderHome(); } // 云档压在默认档上合并，缺字段不炸
+}).catch(() => {});
+// 添加到桌面：仅容器内显示（用户点击才触发）
+if (desktopAvailable()) {
+  const dBtn = $('btn-desktop');
+  dBtn.classList.remove('hidden');
+  dBtn.addEventListener('click', async () => {
+    const r = await addToDesktop();
+    if (r.message) { dBtn.textContent = r.message; setTimeout(() => { dBtn.textContent = '📲 添加到桌面'; }, 2400); }
+  });
+}
+
+</script>
+</body>
+</html>
